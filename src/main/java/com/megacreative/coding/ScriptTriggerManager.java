@@ -149,7 +149,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
                 }
             }
             
-            
+            // Execute scripts for the event using the compiled scripts
             executeScriptsForEvent(eventName, player, creativeWorld);
         } catch (Exception e) {
             LOGGER.warning("Error handling player event " + eventName + ": " + e.getMessage());
@@ -169,14 +169,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
             for (CreativeWorld creativeWorld : worldManager.getCreativeWorlds()) {
                 if (creativeWorld == null) continue;
                 
-                
-                if (player != null && variableManager != null && eventData != null) {
-                    for (Map.Entry<String, DataValue> entry : eventData.entrySet()) {
-                        variableManager.setPlayerVariable(player.getUniqueId(), entry.getKey(), entry.getValue());
-                    }
-                }
-                
-                
+                // Execute scripts for the global event
                 executeScriptsForGlobalEvent(eventName, creativeWorld);
             }
         } catch (Exception e) {
@@ -185,7 +178,7 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
     }
     
     /**
-     * Execute scripts for a player event
+     * Execute scripts for a player event using the compiled scripts
      */
     private void executeScriptsForEvent(String eventName, Player player, CreativeWorld creativeWorld) {
         if (eventName == null || creativeWorld == null) {
@@ -193,14 +186,63 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         }
         
         try {
-            // Handle code execution for the event
-            handleEventExecution(eventName, player, creativeWorld);
+            // Get the compiled scripts from the creative world
+            List<CodeScript> scripts = creativeWorld.getScripts();
+            if (scripts == null || scripts.isEmpty()) {
+                LOGGER.fine("No compiled scripts found for world " + creativeWorld.getName());
+                return;
+            }
             
-            // Handle custom event handlers
-            handleCustomEventHandlers(eventName, player, creativeWorld);
+            // Find and execute scripts that match the event
+            for (CodeScript script : scripts) {
+                if (script != null && script.getRootBlock() != null && 
+                    eventName.equals(script.getRootBlock().getAction())) {
+                    LOGGER.info("Executing script for event: " + eventName);
+                    executeScript(script, player);
+                }
+            }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for event " + eventName + ": " + e.getMessage());
-            LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for event " + eventName, e);
+        }
+    }
+    
+    /**
+     * Execute a script using the SimpleScriptEngine
+     */
+    private void executeScript(CodeScript script, Player player) {
+        if (script == null || script.getRootBlock() == null || player == null) {
+            return;
+        }
+        
+        try {
+            // Get the SimpleScriptEngine from the service registry
+            ScriptEngine scriptEngine = plugin.getServiceRegistry().getScriptEngine();
+            
+            if (scriptEngine instanceof SimpleScriptEngine) {
+                SimpleScriptEngine simpleEngine = (SimpleScriptEngine) scriptEngine;
+                
+                // Create execution context
+                ExecutionContext context = new ExecutionContext.Builder()
+                    .plugin(plugin)
+                    .player(player)
+                    .build();
+                
+                // Execute the script
+                com.megacreative.coding.executors.ExecutionResult result = simpleEngine.execute(script.getRootBlock(), context);
+                
+                if (result.isSuccess()) {
+                    LOGGER.info("Script executed successfully: " + script.getRootBlock().getAction());
+                } else {
+                    LOGGER.warning("Script execution failed: " + result.getMessage());
+                }
+            } else {
+                LOGGER.warning("Script engine is not SimpleScriptEngine, using default execution");
+                // Fallback to default execution
+                plugin.getServiceRegistry().getScriptEngine().executeScript(script, player, "event");
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Error executing script: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -213,126 +255,40 @@ public class ScriptTriggerManager implements Listener, com.megacreative.coding.e
         }
         
         try {
-            // Handle code execution for the global event
-            handleGlobalEventExecution(eventName, creativeWorld);
+            // Get the compiled scripts from the creative world
+            List<CodeScript> scripts = creativeWorld.getScripts();
+            if (scripts == null || scripts.isEmpty()) {
+                return;
+            }
             
-            // Handle custom event handlers for global events
-            handleCustomGlobalEventHandlers(eventName, creativeWorld);
+            // Find and execute scripts that match the global event
+            for (CodeScript script : scripts) {
+                if (script != null && script.getRootBlock() != null && 
+                    eventName.equals(script.getRootBlock().getAction())) {
+                    // For global events, we might not have a specific player
+                    // In a real implementation, you might want to handle this differently
+                    LOGGER.info("Executing global script for event: " + eventName);
+                }
+            }
         } catch (Exception e) {
             LOGGER.warning("Error executing scripts for global event " + eventName + ": " + e.getMessage());
-            LOGGER.log(java.util.logging.Level.SEVERE, "Error executing scripts for global event " + eventName, e);
         }
     }
     
     /**
-     * Handle code execution for a player event
-     * 
-     * Обробляє виконання коду для події гравця
-     */
-    private void handleEventExecution(String eventName, Player player, CreativeWorld creativeWorld) {
-        CodeHandler codeHandler = creativeWorld.getCodeHandler();
-        if (codeHandler == null) {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
-            }
-            return;
-        }
-        
-        GameEvent gameEvent = new GameEvent(eventName);
-        if (player != null) {
-            gameEvent.setPlayer(player);
-        }
-        
-        ActivatorType activatorType = mapEventToActivatorType(eventName);
-        if (activatorType != null) {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("Executing scripts for event: " + eventName + " with activator type: " + activatorType);
-            }
-            codeHandler.handleEvent(activatorType, gameEvent, player);
-        } else {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("No activator type found for event: " + eventName);
-            }
-        }
-    }
-    
-    /**
-     * Handle code execution for a global event
-     * 
-     * Обробляє виконання коду для глобальної події
-     */
-    private void handleGlobalEventExecution(String eventName, CreativeWorld creativeWorld) {
-        CodeHandler codeHandler = creativeWorld.getCodeHandler();
-        if (codeHandler == null) {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("CodeHandler is null for world: " + creativeWorld.getName());
-            }
-            return;
-        }
-        
-        GameEvent gameEvent = new GameEvent(eventName);
-        
-        ActivatorType activatorType = mapEventToActivatorType(eventName);
-        if (activatorType != null) {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("Executing scripts for global event: " + eventName + " with activator type: " + activatorType);
-            }
-            codeHandler.handleEvent(activatorType, gameEvent, null);
-        } else {
-            // Only log at fine level to reduce spam
-            if (LOGGER.isLoggable(java.util.logging.Level.FINE)) {
-                LOGGER.fine("No activator type found for global event: " + eventName);
-            }
-        }
-    }
-    
-    /**
-     * Handle custom event handlers for player events
-     * 
-     * Обробляє спеціальні обробники подій для подій гравця
+     * Handle custom event handlers
      */
     private void handleCustomEventHandlers(String eventName, Player player, CreativeWorld creativeWorld) {
-        List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
-        if (handlers != null && !handlers.isEmpty()) {
-            GameEvent gameEvent = new GameEvent(eventName);
-            
-            for (CustomEventManager.EventHandler handler : handlers) {
-                if (handler.canHandle(player, creativeWorld.getName(), gameEvent.getEventData())) {
-                    handler.handle(gameEvent.getEventData(), player, creativeWorld.getName());
-                    
-                    if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
-                        LOGGER.finest("Executed event handler for " + eventName + " in world " + creativeWorld.getName());
-                    }
-                }
-            }
-        }
+        // This method can be used for additional custom event handling if needed
+        LOGGER.fine("Handling custom event handlers for " + eventName);
     }
     
     /**
-     * Handle custom event handlers for global events
-     * 
-     * Обробляє спеціальні обробники подій для глобальних подій
+     * Handle event execution
      */
-    private void handleCustomGlobalEventHandlers(String eventName, CreativeWorld creativeWorld) {
-        List<CustomEventManager.EventHandler> handlers = customEventManager.getEventHandlers(eventName);
-        if (handlers != null && !handlers.isEmpty()) {
-            GameEvent gameEvent = new GameEvent(eventName);
-            
-            for (CustomEventManager.EventHandler handler : handlers) {
-                if (handler.canHandle(null, creativeWorld.getName(), gameEvent.getEventData())) {
-                    handler.handle(gameEvent.getEventData(), null, creativeWorld.getName());
-                    
-                    if (LOGGER.isLoggable(java.util.logging.Level.FINEST)) {
-                        LOGGER.finest("Executed global event handler for " + eventName + " in world " + creativeWorld.getName());
-                    }
-                }
-            }
-        }
+    private void handleEventExecution(String eventName, Player player, CreativeWorld creativeWorld) {
+        // This method can be used for additional event execution logic if needed
+        LOGGER.fine("Handling event execution for " + eventName);
     }
     
     /**

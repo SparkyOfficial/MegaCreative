@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -129,11 +130,14 @@ public class DevCommand implements CommandExecutor {
             player.sendMessage("§aСкрипты скомпилированы успешно!");
             player.sendMessage("§7Найдено скриптов: " + scripts.size());
             
-            // Show details of each script
+            // Show detailed structure of each script
+            compiler.printScriptStructure(scripts);
+            
+            // Show summary of each script
             for (int i = 0; i < scripts.size(); i++) {
                 com.megacreative.coding.CodeScript script = scripts.get(i);
                 int blockCount = script.getBlocks().size();
-                player.sendMessage("§7  " + (i + 1) + ". " + script.getName() + " (" + blockCount + " блоков)");
+                player.sendMessage("§7  " + (i + 1) + ". " + script.getRootBlock().getAction() + " (" + blockCount + " блоков)");
             }
         } catch (Exception e) {
             player.sendMessage("§cОшибка компиляции скриптов: " + e.getMessage());
@@ -143,7 +147,7 @@ public class DevCommand implements CommandExecutor {
     }
     
     /**
-     * Creates a test script for player join -> send message
+     * Creates a test script by placing actual blocks in the world
      */
     private void createTestScript(Player player) {
         try {
@@ -155,26 +159,58 @@ public class DevCommand implements CommandExecutor {
                 return;
             }
             
-            // Create event block (diamond block for player join)
-            com.megacreative.coding.CodeBlock eventBlock = new com.megacreative.coding.CodeBlock("DIAMOND_BLOCK", "onJoin");
-            eventBlock.setParameter("event", "playerConnect");
+            // Get the player's current location as the starting point
+            Location startLoc = player.getLocation().clone();
             
-            // Create action block (cobblestone for send message)
-            com.megacreative.coding.CodeBlock actionBlock = new com.megacreative.coding.CodeBlock("COBBLESTONE", "sendMessage");
-            actionBlock.setParameter("message", "Hello, %player%!");
-            actionBlock.setParameter("type", "chat");
+            // Make sure we're placing blocks on a valid surface (glass platform)
+            startLoc.setY(64); // Platform height
             
-            // Connect the blocks
-            eventBlock.setNextBlock(actionBlock);
+            // Round coordinates to integers
+            startLoc.setX(Math.round(startLoc.getX()));
+            startLoc.setZ(Math.round(startLoc.getZ()));
             
-            // Create script
-            com.megacreative.coding.CodeScript script = new com.megacreative.coding.CodeScript("Test Player Join Script", true, eventBlock);
+            player.sendMessage("§eСоздание тестового скрипта на координатах: " + 
+                startLoc.getBlockX() + ", " + startLoc.getBlockY() + ", " + startLoc.getBlockZ());
             
-            // Add script to world
-            creativeWorld.addScript(script);
+            // Get the block placement handler
+            com.megacreative.coding.BlockPlacementHandler placementHandler = 
+                plugin.getServiceRegistry().getBlockPlacementHandler();
+            
+            // Place event block (diamond block for player join)
+            Location eventBlockLoc = startLoc.clone();
+            eventBlockLoc.getBlock().setType(Material.DIAMOND_BLOCK);
+            
+            // Simulate block placement event
+            BlockPlaceEvent eventBlockEvent = new BlockPlaceEvent(
+                eventBlockLoc.getBlock(),
+                eventBlockLoc.getBlock().getState(),
+                eventBlockLoc.clone().add(0, -1, 0).getBlock(), // Placed against
+                new org.bukkit.inventory.ItemStack(Material.DIAMOND_BLOCK),
+                player,
+                true,
+                org.bukkit.inventory.EquipmentSlot.HAND
+            );
+            placementHandler.onBlockPlace(eventBlockEvent);
+            
+            // Place action block (cobblestone for send message) to the right
+            Location actionBlockLoc = startLoc.clone().add(1, 0, 0);
+            actionBlockLoc.getBlock().setType(Material.COBBLESTONE);
+            
+            // Simulate block placement event
+            BlockPlaceEvent actionBlockEvent = new BlockPlaceEvent(
+                actionBlockLoc.getBlock(),
+                actionBlockLoc.getBlock().getState(),
+                actionBlockLoc.clone().add(0, -1, 0).getBlock(), // Placed against
+                new org.bukkit.inventory.ItemStack(Material.COBBLESTONE),
+                player,
+                true,
+                org.bukkit.inventory.EquipmentSlot.HAND
+            );
+            placementHandler.onBlockPlace(actionBlockEvent);
             
             player.sendMessage("§aТестовый скрипт создан успешно!");
-            player.sendMessage("§7Попробуйте выйти и снова войти на сервер для тестирования.");
+            player.sendMessage("§7Попробуйте скомпилировать скрипты с помощью /dev compile");
+            player.sendMessage("§7Затем перезайдите на сервер для тестирования.");
         } catch (Exception e) {
             player.sendMessage("§cОшибка создания тестового скрипта: " + e.getMessage());
             plugin.getLogger().severe("Ошибка создания тестового скрипта: " + e.getMessage());

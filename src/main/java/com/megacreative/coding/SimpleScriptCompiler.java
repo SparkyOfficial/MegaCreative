@@ -4,11 +4,14 @@ import com.megacreative.MegaCreative;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
+import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -137,6 +140,7 @@ public class SimpleScriptCompiler {
             // If we found a next block, connect it
             if (nextBlock != null) {
                 currentBlock.setNextBlock(nextBlock);
+                LOGGER.info("Linked horizontal: " + formatLocation(currentBlock) + " -> " + formatLocation(nextBlock));
                 currentBlock = nextBlock;
                 currentLocation = nextLocation;
             } else {
@@ -152,57 +156,58 @@ public class SimpleScriptCompiler {
      * @param rootBlock The root block to start from
      */
     private void buildVerticalChains(CodeBlock rootBlock) {
-        // This is a simplified version - in a real implementation,
-        // you would need to scan for parent-child relationships based on
-        // indentation and block types
-        // For now, we'll just ensure existing children are properly connected
-        connectChildren(rootBlock);
+        // Build the complete tree structure by linking all blocks
+        Map<Location, CodeBlock> allBlocks = placementHandler.getBlockCodeBlocks();
+        linkBlocks(rootBlock, allBlocks);
     }
     
     /**
-     * Recursively connects children for a block and its chain
+     * Recursively links blocks to build the complete script structure
      * 
-     * @param block The block to process
+     * @param current The current block to process
+     * @param allBlocks Map of all blocks in the world
      */
-    private void connectChildren(CodeBlock block) {
-        if (block == null) return;
+    private void linkBlocks(CodeBlock current, Map<Location, CodeBlock> allBlocks) {
+        if (current == null) return;
+
+        Location currentLocation = findBlockLocation(current);
+        if (currentLocation == null) return;
         
-        // Process this block's children
-        findAndConnectChildren(block);
-        
-        // Process next block in chain
-        connectChildren(block.getNextBlock());
-        
-        // Process children's chains
-        for (CodeBlock child : block.getChildren()) {
-            connectChildren(child);
+        // 1. Связываем горизонтальную цепочку (nextBlock)
+        Location nextLocation = currentLocation.clone().add(1, 0, 0);
+        CodeBlock nextBlock = allBlocks.get(nextLocation);
+        if (nextBlock != null) {
+            current.setNextBlock(nextBlock);
+            LOGGER.info("Linked horizontal: " + formatLocation(current) + " -> " + formatLocation(nextBlock));
         }
-    }
-    
-    /**
-     * Finds and connects children for a specific block based on position
-     * 
-     * @param parentBlock The parent block
-     */
-    private void findAndConnectChildren(CodeBlock parentBlock) {
-        if (parentBlock == null || !isControlBlock(parentBlock)) {
-            return;
+
+        // 2. Если это блок-контейнер (IF, REPEAT), ищем его дочерние элементы
+        if (isControlBlock(current)) {
+            // Дочерние блоки должны быть на следующей линии (например, Z+2)
+            // и их X должен быть больше, чем у родителя (отступ)
+            int parentX = currentLocation.getBlockX();
+            int parentZ = currentLocation.getBlockZ();
+            
+            // Ищем дочерние блоки на следующей линии (Z + LINES_SPACING)
+            int childLineZ = parentZ + DevWorldGenerator.getLinesSpacing();
+            
+            // Ищем первый блок с отступом (X > parentX) на следующей линии
+            for (int childX = parentX + 1; childX < parentX + 20; childX++) { // Ограничиваем поиск 20 блоками вправо
+                Location childLocation = new Location(currentLocation.getWorld(), childX, currentLocation.getBlockY(), childLineZ);
+                CodeBlock childBlock = allBlocks.get(childLocation);
+                
+                if (childBlock != null) {
+                    current.addChild(childBlock);
+                    LOGGER.info("Linked child: " + formatLocation(current) + " -> " + formatLocation(childBlock));
+                    // Рекурсивно строим цепочку для дочернего блока
+                    linkBlocks(childBlock, allBlocks);
+                    break; // Берем только первый дочерний блок
+                }
+            }
         }
-        
-        Location parentLocation = findBlockLocation(parentBlock);
-        if (parentLocation == null) return;
-        
-        // Look for children blocks below and to the right
-        // This is a simplified approach - a full implementation would need
-        // to check indentation levels and block types more carefully
-        Location childLocation = parentLocation.clone().add(0, 0, 2); // 2 blocks down (next line)
-        
-        // Check if there's a block at the expected child position
-        CodeBlock childBlock = placementHandler.getCodeBlock(childLocation);
-        if (childBlock != null && childBlock.getX() > parentBlock.getX()) {
-            // Add as child if it's indented (further right)
-            parentBlock.addChild(childBlock);
-        }
+
+        // 3. Рекурсивно идем по основной (горизонтальной) цепочке
+        linkBlocks(current.getNextBlock(), allBlocks);
     }
     
     /**
@@ -280,6 +285,64 @@ public class SimpleScriptCompiler {
             }
         } catch (Exception e) {
             LOGGER.warning("Error saving scripts to world: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Prints detailed script structure for debugging
+     * 
+     * @param scripts The scripts to print
+     */
+    public void printScriptStructure(List<CodeScript> scripts) {
+        for (int i = 0; i < scripts.size(); i++) {
+            CodeScript script = scripts.get(i);
+            LOGGER.info("Script " + (i + 1) + ": " + script.getRootBlock().getAction() + 
+                       " (" + script.getBlocks().size() + " blocks)");
+            printBlockChain(script.getRootBlock(), 0);
+        }
+    }
+    
+    /**
+     * Recursively prints the block chain structure
+     * 
+     * @param block The block to print
+     * @param indent The indentation level
+     */
+    private void printBlockChain(CodeBlock block, int indent) {
+        if (block == null) return;
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            sb.append("  ");
+        }
+        sb.append("- [").append(getBlockType(block)).append(": ").append(block.getAction()).append("]");
+        
+        LOGGER.info(sb.toString());
+        
+        // Print children if any
+        if (!block.getChildren().isEmpty()) {
+            for (CodeBlock child : block.getChildren()) {
+                printBlockChain(child, indent + 1);
+            }
+        }
+        
+        // Continue with next block
+        printBlockChain(block.getNextBlock(), indent);
+    }
+    
+    /**
+     * Gets a simple block type description for logging
+     * 
+     * @param block The block to describe
+     * @return The block type description
+     */
+    private String getBlockType(CodeBlock block) {
+        if (isEventBlock(block)) {
+            return "Event";
+        } else if (isControlBlock(block)) {
+            return "Control";
+        } else {
+            return "Action";
         }
     }
 }
