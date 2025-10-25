@@ -302,6 +302,20 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
     }
     
     // Simplified processBlock method for debugging
+    /**
+     * Checks if a block is an event block
+     * 
+     * @param block The block to check
+     * @return true if the block is an event block, false otherwise
+     */
+    private boolean isEventBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) {
+            return false;
+        }
+        // Event blocks have actions that start with "on"
+        return block.getAction().startsWith("on");
+    }
+
     private ExecutionResult simplifiedProcessBlock(CodeBlock block, ExecutionContext context, int depth) {
         // Add debug logging
         Player player = context.getPlayer();
@@ -315,6 +329,15 @@ public class DefaultScriptEngine implements ScriptEngine, EnhancedScriptEngine, 
                 player.sendMessage("§cBlock is null or max depth exceeded");
             }
             return ExecutionResult.success(); // End of chain
+        }
+        
+        // Check if this is an event block - if so, skip execution and go to next block
+        if (isEventBlock(block)) {
+            if (player != null) {
+                player.sendMessage("§aRecognized as EVENT block (" + block.getAction() + "), moving to next block.");
+            }
+            plugin.getLogger().fine("Skipping event block: " + block.getAction() + ", executing nextBlock in chain.");
+            return simplifiedProcessBlock(block.getNextBlock(), context, depth + 1);
         }
 
         // 1. Execute the current block

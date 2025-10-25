@@ -107,10 +107,6 @@ blocks:
       - "checkServerOnline"
       - "checkWorldWeather"
       - "worldGuardRegionCheck"
-      - "checkPlayerStats"
-      - "checkWorldWeather"
-      - "checkPlayerInventory"
-      - "checkServerOnline"
   
   IRON_BLOCK:
     name: "&f&lПеременная"
@@ -194,7 +190,6 @@ blocks:
     actions:
       - "callFunction"
       - "saveFunction"
-      - "callFunction"
       - "customFunction"
   
   BOOKSHELF:
@@ -480,7 +475,7 @@ action_configurations:
   addPlayerToTeam:
     slots:
       0:
-        name: "§aИмя команды"
+        name: "§аИмя команды"
         description: "§7Положите бумагу с названием имени команды"
         placeholder_item: "PAPER"
         slot_name: "teamName"
@@ -498,7 +493,7 @@ action_configurations:
   saveLocation:
     slots:
       0:
-        name: "§aИмя локации"
+        name: "§аИмя локации"
         description: "§7Положите бумагу с названием имени локации"
         placeholder_item: "PAPER"
         slot_name: "locationName"
@@ -509,7 +504,7 @@ action_configurations:
   getLocation:
     slots:
       0:
-        name: "§aИмя локации"
+        name: "§аИмя локации"
         description: "§7Положите бумагу с названием имени локации"
         placeholder_item: "PAPER"
         slot_name: "locationName"
@@ -527,7 +522,7 @@ action_configurations:
   isNight:
     slots:
       0:
-        name: "§aВремя суток"
+        name: "§аВремя суток"
         description: "§7Положите предмет, символизирующий время (черная шерсть = ночь, желтая = день)"
         placeholder_item: "BLACK_WOOL"
         slot_name: "time_slot"
@@ -538,7 +533,7 @@ action_configurations:
   isRiding:
     slots:
       0:
-        name: "§aТип существа для езды"
+        name: "§аТип существа для езды"
         description: "§7Положите предмет, символизирующий существо (седло = лошадь, лодка = лодка)"
         placeholder_item: "SADDLE"
         slot_name: "entity_slot"
@@ -549,7 +544,7 @@ action_configurations:
   checkPlayerInventory:
     slots:
       0:
-        name: "§aПредмет для проверки"
+        name: "§аПредмет для проверки"
         description: "§7Положите предмет, который нужно проверить в инвентаре"
         placeholder_item: "STONE"
         slot_name: "item_slot"
@@ -568,12 +563,12 @@ action_configurations:
   isNearBlock:
     slots:
       0:
-        name: "§aТип блока"
+        name: "§аТип блока"
         description: "§7Положите предмет блока для поиска"
         placeholder_item: "STONE"
         slot_name: "block_slot"
       1:
-        name: "§bРасстояние поиска"
+        name: "§бРасстояние поиска"
         description: "§7Положите бумагу с расстоянием (по умолчанию 5)"
         placeholder_item: "PAPER"
         slot_name: "distance_slot"
@@ -582,12 +577,12 @@ action_configurations:
   mobNear:
     slots:
       0:
-        name: "§aТип существа"
+        name: "§аТип существа"
         description: "§7Положите предмет, символизирующий существо (по умолчанию любое)"
         placeholder_item: "ZOMBIE_HEAD"
         slot_name: "mob_slot"
       1:
-        name: "§bРасстояние поиска"
+        name: "§бРасстояние поиска"
         description: "§7Положите бумагу с расстоянием (по умолчанию 10)"
         placeholder_item: "PAPER"
         slot_name: "distance_slot"
@@ -596,7 +591,7 @@ action_configurations:
   playerGameMode:
     slots:
       0:
-        name: "§aРежим игры"
+        name: "§аРежим игры"
         description: "§7Положите предмет, символизирующий режим игры (SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR)"
         placeholder_item: "GRASS_BLOCK"
         slot_name: "mode_slot"
@@ -605,12 +600,12 @@ action_configurations:
   playerHealth:
     slots:
       0:
-        name: "§aЗдоровье"
+        name: "§аЗдоровье"
         description: "§7Положите бумагу с количеством здоровья"
         placeholder_item: "PAPER"
         slot_name: "health_slot"
       1:
-        name: "§bОператор сравнения"
+        name: "§бОператор сравнения"
         description: "§7Положите бумагу с оператором (greater_or_equal, less, equal и т.д.)"
         placeholder_item: "PAPER"
         slot_name: "operator_slot"
@@ -619,12 +614,12 @@ action_configurations:
   hasItem:
     slots:
       0:
-        name: "§aПредмет"
+        name: "§аПредмет"
         description: "§7Положите предмет для проверки"
         placeholder_item: "STONE"
         slot_name: "item_slot"
       1:
-        name: "§bКоличество"
+        name: "§бКоличество"
         description: "§7Положите бумагу с количеством (по умолчанию 1)"
         placeholder_item: "PAPER"
         slot_name: "amount_slot"
@@ -633,7 +628,7 @@ action_configurations:
   hasPermission:
     slots:
       0:
-        name: "§aПраво доступа"
+        name: "§аПраво доступа"
         description: "§7Положите бумагу с названием права доступа"
         placeholder_item: "PAPER"
         slot_name: "permission_slot"
@@ -656,7 +651,7 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "region_name_slot"
       1:
-        name: "§bНазвание мира"
+        name: "§бНазвание мира"
         description: "§7Положите бумагу с названием мира (оставьте пустым для текущего мира игрока)"
         placeholder_item: "PAPER"
         slot_name: "world_slot"
@@ -665,12 +660,12 @@ action_configurations:
   checkPlayerStats:
     slots:
       0:
-        name: "§aТип статистики"
+        name: "§аТип статистики"
         description: "§7Положите бумагу с типом статистики (например, JUMP, DAMAGE_DEALT и т.д.)"
         placeholder_item: "PAPER"
         slot_name: "stat_type_slot"
       1:
-        name: "§bЗначение для сравнения"
+        name: "§бЗначение для сравнения"
         description: "§7Положите бумагу со значением для сравнения"
         placeholder_item: "PAPER"
         slot_name: "value_slot"
@@ -684,12 +679,12 @@ action_configurations:
   isNearEntity:
     slots:
       0:
-        name: "§aСущество для поиска"
+        name: "§аСущество для поиска"
         description: "§7Положите предмет, символизирующий существо (например, гнилую плоть для зомби)"
         placeholder_item: "PLAYER_HEAD"
         slot_name: "entity_slot"
       1:
-        name: "§bРадиус поиска"
+        name: "§бРадиус поиска"
         description: "§7Положите бумагу, переименованную в число (например, 10)"
         placeholder_item: "COMPASS"
         slot_name: "radius_slot"
@@ -698,7 +693,7 @@ action_configurations:
   isPlayerHolding:
     slots:
       0:
-        name: "§aПредмет в руке"
+        name: "§аПредмет в руке"
         description: "§7Положите предмет, который должен быть в руке игрока"
         placeholder_item: "STONE"
         slot_name: "item_slot"
@@ -725,7 +720,7 @@ action_configurations:
   setArmor:
     slots:
       0:
-        name: "§aШлем"
+        name: "§аШлем"
         description: "§7Положите шлем для установки"
         placeholder_item: "DIAMOND_HELMET"
         slot_name: "helmet_slot"
@@ -749,7 +744,7 @@ action_configurations:
   giveItem:
     slots:
       0:
-        name: "§aПредмет для выдачи"
+        name: "§аПредмет для выдачи"
         description: "§7Положите предмет, который нужно выдать игроку"
         placeholder_item: "DIAMOND"
         slot_name: "item"
@@ -828,12 +823,12 @@ action_configurations:
   spawnEntity:
     slots:
       0:
-        name: "§aТип существа"
+        name: "§аТип существа"
         description: "§7Положите предмет, символизирующий существо для спавна"
         placeholder_item: "ZOMBIE_HEAD"
         slot_name: "entity_slot"
       1:
-        name: "§bКоличество"
+        name: "§бКоличество"
         description: "§7Положите бумагу с названием 'количество:X'"
         placeholder_item: "PAPER"
         slot_name: "count_slot"
@@ -940,7 +935,7 @@ action_configurations:
         placeholder_item: "PAPER"
         slot_name: "name"
       1:
-        name: "§bЦелевая переменная"
+        name: "§бЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "target"
@@ -949,7 +944,7 @@ action_configurations:
   setServerVar:
     slots:
       0:
-        name: "§aИмя серверной переменной"
+        name: "§аИмя серверной переменной"
         description: "§7Положите бумагу с названием серверной переменной"
         placeholder_item: "PAPER"
         slot_name: "name"
@@ -963,7 +958,7 @@ action_configurations:
   getPlayerName:
     slots:
       0:
-        name: "§aЦелевая переменная"
+        name: "§аЦелевая переменная"
         description: "§7Положите бумагу с названием переменной для сохранения имени игрока"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -974,14 +969,14 @@ action_configurations:
   getVar:
     slots:
       0:
-        name: "§aИмя переменной"
+        name: "§аИмя переменной"
         description: "§7Положите бумагу с названием переменной для получения"
         placeholder_item: "PAPER"
         slot_name: "sourceVariable"
         validation: "length:1-32"
         hint: "Имя переменной для получения значения"
       1:
-        name: "§bЦелевая переменная"
+        name: "§бЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -999,7 +994,7 @@ action_configurations:
         validation: "length:1-32"
         hint: "Имя глобальной переменной для получения"
       1:
-        name: "§bЦелевая переменная"
+        name: "§бЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -1010,14 +1005,14 @@ action_configurations:
   getServerVar:
     slots:
       0:
-        name: "§aИмя серверной переменной"
+        name: "§аИмя серверной переменной"
         description: "§7Положите бумагу с названием серверной переменной"
         placeholder_item: "PAPER"
         slot_name: "serverVariable"
         validation: "length:1-32"
         hint: "Имя серверной переменной для получения"
       1:
-        name: "§bЦелевая переменная"
+        name: "§бЦелевая переменная"
         description: "§7Положите бумагу с названием целевой переменной"
         placeholder_item: "PAPER"
         slot_name: "targetVariable"
@@ -1036,7 +1031,7 @@ action_configurations:
         default_value: "1"
         hint: "Минимальное значение для генерации"
       1:
-        name: "§bМаксимальное значение"
+        name: "§бМаксимальное значение"
         description: "§7Положите бумагу с максимальным значением (по умолчанию 100)"
         placeholder_item: "PAPER"
         slot_name: "maxValue"
@@ -1062,7 +1057,7 @@ action_configurations:
         validation: "enum:local,world,player,server"
         hint: "Область видимости для инспекции переменных"
       1:
-        name: "§bФильтр"
+        name: "§бФильтр"
         description: "§7Положите бумагу с фильтром имен переменных (необязательно)"
         placeholder_item: "PAPER"
         slot_name: "filter"
@@ -1134,12 +1129,12 @@ action_configurations:
   worldTime:
     slots:
       0:
-        name: "§aВремя мира"
+        name: "§аВремя мира"
         description: "§7Положите бумагу с названием времени мира (0-24000)"
         placeholder_item: "PAPER"
         slot_name: "time"
       1:
-        name: "§bОператор сравнения"
+        name: "§бОператор сравнения"
         description: "§7Положите бумагу с оператором (equal, greater, less, greater_or_equal, less_or_equal)"
         placeholder_item: "PAPER"
         slot_name: "operator"
@@ -1148,12 +1143,12 @@ action_configurations:
   isBlockType:
     slots:
       0:
-        name: "§aТип блока"
+        name: "§аТип блока"
         description: "§7Положите предмет блока для проверки"
         placeholder_item: "STONE"
         slot_name: "block_slot"
       1:
-        name: "§bОператор сравнения"
+        name: "§бОператор сравнения"
         description: "§7Положите бумагу с оператором (is, is_not)"
         placeholder_item: "PAPER"
         slot_name: "operator"
@@ -1222,13 +1217,13 @@ action_configurations:
   onPlayerMove:
     slots:
       0:
-        name: "§aМинимальное расстояние"
+        name: "§аМинимальное расстояние"
         description: "§7Положите бумагу с минимальным расстоянием перемещения"
         placeholder_item: "PAPER"
         slot_name: "distance"
         validation: "number"
       1:
-        name: "§bФильтр мира"
+        name: "§бФильтр мира"
         description: "§7Положите бумагу с названием мира (необязательно)"
         placeholder_item: "PAPER"
         slot_name: "world"
@@ -1341,7 +1336,7 @@ action_configurations:
   economyTransaction:
     slots:
       0:
-        name: "§aОперация"
+        name: "§аОперация"
         description: "§7Положите бумагу с операцией (give/take/check)"
         placeholder_item: "PAPER"
         slot_name: "operation"
