@@ -6,315 +6,176 @@ import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Manages the structure of code blocks, handling both horizontal connections (nextBlock)
- * and vertical relationships (parent-child) between code blocks.
- * 
- * This class replaces the separate BlockLinker and BlockHierarchyManager classes
- * to provide a unified approach to code block structure management.
- * 
- * Listens to CodeBlockPlacedEvent and CodeBlockBrokenEvent to establish and maintain
- * connections between adjacent blocks.
+ * Manages the structure of code blocks by creating horizontal (nextBlock)
+ * and vertical (parent-child) relationships.
  */
 public class CodeStructureManager implements Listener {
     
     private static final Logger LOGGER = Logger.getLogger(CodeStructureManager.class.getName());
-    
-    private final MegaCreative plugin;
+
     private final BlockPlacementHandler placementHandler;
-    
+    private final MegaCreative plugin;
+
     public CodeStructureManager(MegaCreative plugin, BlockPlacementHandler placementHandler) {
         this.plugin = plugin;
         this.placementHandler = placementHandler;
     }
-    
-    /**
-     * Handles block placement and establishes both horizontal and vertical connections
-     */
+
     @EventHandler
     public void onCodeBlockPlaced(CodeBlockPlacedEvent event) {
-        CodeBlock codeBlock = event.getCodeBlock();
         Location location = event.getLocation();
-        
-        // Use fine logging instead of info to reduce spam
-        LOGGER.fine("Structure manager is processing block at " + location);
-        
-        // Skip connection logic for bracket blocks
-        if (codeBlock.isBracket()) {
-            LOGGER.fine("Skipping connection for bracket block at " + location);
-            return;
-        }
-        
-        // Handle horizontal connections (nextBlock relationships)
-        handleHorizontalConnections(location, codeBlock);
-        
-        // Handle vertical connections (parent-child relationships)
-        handleVerticalConnections(location, codeBlock);
+        CodeBlock newBlock = event.getCodeBlock();
+        Player player = event.getPlayer();
+
+        // Сразу после установки блока, обновляем все связи вокруг него.
+        // Это надежнее, чем пытаться соединить только два блока.
+        rebuildConnectionsAround(location, player);
     }
-    
-    /**
-     * Handles block removal and cleans up connections
-     */
+
     @EventHandler
     public void onCodeBlockBroken(CodeBlockBrokenEvent event) {
-        CodeBlock codeBlock = event.getCodeBlock();
         Location location = event.getLocation();
+        Player player = event.getPlayer();
+        CodeBlock brokenBlock = event.getCodeBlock();
+
+        // При ломании блока, нужно разорвать связи
+        // 1. Отсоединяем его от родителя
+        findParentBlock(location).ifPresent(parent -> {
+            parent.getChildren().remove(brokenBlock);
+            player.sendMessage("§e[Debug] Detached from parent at " + formatLoc(parent.getX(), parent.getZ()));
+        });
         
-        LOGGER.fine("Structure manager is cleaning up connections for block at " + location);
-        
-        // Clean up nextBlock connections
-        if (codeBlock.getNextBlock() != null) {
-            codeBlock.setNextBlock(null);
-        }
-        
-        // Clean up parent-child connections
-        // Note: We don't need to remove this block from its parent's children list
-        // as the block is being removed entirely
-    }
-    
-    /**
-     * Handles horizontal connections between code blocks (nextBlock relationships)
-     * @param location The location of the placed block
-     * @param codeBlock The placed code block
-     */
-    private void handleHorizontalConnections(Location location, CodeBlock codeBlock) {
-        // Connect with previous block in the same line (horizontal connection)
-        Location prevLocation = getPreviousLocationInLine(location);
-        if (prevLocation != null) {
-            CodeBlock prevBlock = placementHandler.getCodeBlock(prevLocation);
-            if (prevBlock != null && !prevBlock.isBracket()) { // Skip brackets
-                prevBlock.setNextBlock(codeBlock);
-                // Use fine logging instead of info to reduce spam
-                LOGGER.fine("Found neighbor at " + prevLocation + ". Linking...");
-                LOGGER.fine("Connected horizontal: " + prevLocation + " -> " + location);
+        // 2. Отсоединяем от предыдущего блока
+        findPreviousBlockInLine(location).ifPresent(prev -> {
+            if (prev.getNextBlock() == brokenBlock) {
+                 prev.setNextBlock(null);
+                 player.sendMessage("§e[Debug] Detached from previous block at " + formatLoc(prev.getX(), prev.getZ()));
             }
-        }
+        });
         
-        // Connect with next block in the same line (for validation)
-        Location nextLocation = getNextLocationInLine(location);
-        if (nextLocation != null) {
-            CodeBlock nextBlock = placementHandler.getCodeBlock(nextLocation);
-            if (nextBlock != null && !nextBlock.isBracket()) { // Skip brackets
-                codeBlock.setNextBlock(nextBlock);
-                // Use fine logging instead of info to reduce spam
-                LOGGER.fine("Found next block at " + nextLocation + ". Linking...");
-                LOGGER.fine("Connected horizontal: " + location + " -> " + nextLocation);
-            }
-        }
+        // Перестраиваем связи для соседних блоков, чтобы они соединились между собой
+        rebuildConnectionsAround(location, player);
     }
     
     /**
-     * Handles vertical connections between code blocks (parent-child relationships)
-     * @param location The location of the placed block
-     * @param codeBlock The placed code block
+     * Rebuilds connections for the block at the given location and its neighbors.
+     * This is a robust way to ensure the structure is always correct.
      */
-    private void handleVerticalConnections(Location location, CodeBlock codeBlock) {
-        // Find parent block and establish parent-child relationship
-        CodeBlock parentBlock = findParentBlock(location);
-        if (parentBlock != null) {
-            parentBlock.addChild(codeBlock);
-            LOGGER.fine("Established parent-child relationship: " + 
-                getLocationString(parentBlock) + " -> " + getLocationString(codeBlock));
-        }
-    }
-    
-    /**
-     * Gets the previous location in the same line
-     * @param location The current location
-     * @return The previous location in the same line, or null if not found
-     */
-    private Location getPreviousLocationInLine(Location location) {
-        if (location == null) return null;
+    public void rebuildConnectionsAround(Location location, Player player) {
+        LOGGER.info("[CodeStructure] Rebuilding connections around " + formatLoc(location));
         
-        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
-        if (line == -1) return null;
-        
-        int currentX = location.getBlockX();
-        if (currentX <= 0) return null;
-        
-        // Return the previous block in the same line
-        return new Location(location.getWorld(), currentX - 1, location.getBlockY(), location.getBlockZ()).clone();
-    }
-    
-    /**
-     * Gets the next location in the same line
-     * @param location The current location
-     * @return The next location in the same line, or null if not found
-     */
-    private Location getNextLocationInLine(Location location) {
-        if (location == null) return null;
-        
-        int line = DevWorldGenerator.getCodeLineFromZ(location.getBlockZ());
-        if (line == -1) return null;
-        
-        int currentX = location.getBlockX();
-        int maxBlocksPerLine = DevWorldGenerator.getBlocksPerLine();
-        
-        if (currentX >= maxBlocksPerLine - 1) return null;
-        
-        // Return the next block in the same line
-        return new Location(location.getWorld(), currentX + 1, location.getBlockY(), location.getBlockZ()).clone();
-    }
-    
-    /**
-     * Finds the parent block for a child block based on indentation
-     */
-    private CodeBlock findParentBlock(Location childLocation) {
-        int childLine = DevWorldGenerator.getCodeLineFromZ(childLocation.getBlockZ());
-        int childX = childLocation.getBlockX();
-        
-        if (childX <= 0) {
-            return null; // No parent for blocks at the start of the line
-        }
-        
-        // Look for parent in previous lines with less indentation
-        for (int parentLine = childLine - 1; parentLine >= 0; parentLine--) {
-            int parentZ = DevWorldGenerator.getZForCodeLine(parentLine);
+        // 1. Находим и связываем текущий блок
+        CodeBlock currentBlock = placementHandler.getCodeBlock(location);
+        if (currentBlock != null) {
+            // Сбрасываем старые связи
+            currentBlock.setNextBlock(null);
             
-            // Look for blocks with less X coordinate (less indentation)
-            for (int parentX = 0; parentX < childX; parentX++) {
-                Location parentLocation = new Location(
-                    childLocation.getWorld(), 
-                    parentX, 
-                    childLocation.getBlockY(), 
-                    parentZ
-                );
-                // Use the placement handler to find parent blocks
-                CodeBlock parentBlock = placementHandler.getCodeBlock(parentLocation);
+            // Связываем с предыдущим блоком
+            findPreviousBlockInLine(location).ifPresent(prev -> {
+                prev.setNextBlock(currentBlock);
+                player.sendMessage("§a[Debug] Linked " + formatLoc(prev.getX(), prev.getZ()) + " -> " + formatLoc(currentBlock.getX(), currentBlock.getZ()));
+                LOGGER.info("[CodeStructure] Linked " + prev.getAction() + " -> " + currentBlock.getAction());
+            });
+
+            // Находим и связываем с родительским блоком
+            findParentBlock(location).ifPresent(parent -> {
+                if (!parent.getChildren().contains(currentBlock)) {
+                    parent.addChild(currentBlock);
+                    player.sendMessage("§a[Debug] Child " + formatLoc(currentBlock.getX(), currentBlock.getZ()) + " added to parent " + formatLoc(parent.getX(), parent.getZ()));
+                    LOGGER.info("[CodeStructure] Added " + currentBlock.getAction() + " as child to " + parent.getAction());
+                }
+            });
+        }
+        
+        // 2. Проверяем следующий блок, чтобы он подхватил связь, если нужно
+        Location nextLocation = getNextLocationInLine(location);
+        CodeBlock nextBlock = placementHandler.getCodeBlock(nextLocation);
+        if (nextBlock != null && currentBlock != null) {
+            currentBlock.setNextBlock(nextBlock);
+            player.sendMessage("§a[Debug] Linked " + formatLoc(currentBlock.getX(), currentBlock.getZ()) + " -> " + formatLoc(nextBlock.getX(), nextBlock.getZ()));
+             LOGGER.info("[CodeStructure] Linked " + currentBlock.getAction() + " -> " + nextBlock.getAction());
+        }
+    }
+    
+    /**
+     * Finds the parent block for a given location. A parent is a control block on a previous
+     * line with less indentation.
+     */
+    private Optional<CodeBlock> findParentBlock(Location childLocation) {
+        int childX = childLocation.getBlockX();
+        int childZ = childLocation.getBlockZ();
+
+        // Идем по линиям (Z) вверх от текущей
+        for (int z = childZ - DevWorldGenerator.getLinesSpacing(); z >= 0; z -= DevWorldGenerator.getLinesSpacing()) {
+            // Идем по блокам (X) слева направо до отступа дочернего блока
+            for (int x = 0; x < childX; x++) {
+                Location potentialParentLoc = new Location(childLocation.getWorld(), x, childLocation.getY(), z);
+                CodeBlock potentialParent = placementHandler.getCodeBlock(potentialParentLoc);
                 
-                if (parentBlock != null && isControlBlock(parentBlock)) {
-                    LOGGER.fine("Found parent block at (" + parentX + ", " + parentLine + 
-                        ") for child at (" + childX + ", " + childLine + ")");
-                    return parentBlock;
+                // Родитель должен существовать, быть блоком-условия/цикла и не быть скобкой
+                if (potentialParent != null && isControlBlock(potentialParent)) {
+                    LOGGER.info("[CodeStructure] Found potential parent: " + potentialParent.getAction() + " at " + formatLoc(x, z));
+                    return Optional.of(potentialParent);
                 }
             }
         }
-        
-        return null;
+        return Optional.empty();
     }
     
     /**
-     * Checks if a block is a control block that can have children
+     * Finds the block immediately to the left on the same line.
+     */
+    private Optional<CodeBlock> findPreviousBlockInLine(Location currentLocation) {
+        int x = currentLocation.getBlockX();
+        if (x > 0) {
+            Location prevLocation = new Location(currentLocation.getWorld(), x - 1, currentLocation.getY(), currentLocation.getZ());
+            return Optional.ofNullable(placementHandler.getCodeBlock(prevLocation));
+        }
+        return Optional.empty();
+    }
+    
+    private Location getNextLocationInLine(Location location) {
+        return location.clone().add(1, 0, 0);
+    }
+    
+    /**
+     * A control block is one that can have children (e.g., IF, REPEAT).
+     * This logic should eventually be data-driven from your block config.
      */
     private boolean isControlBlock(CodeBlock block) {
-        // For now, we'll consider any non-bracket block as potentially having children
-        // In a more sophisticated implementation, this would check block configuration
-        return !block.isBracket();
+        if (block == null || block.getAction() == null) return false;
+        
+        // Скобки не могут быть родителями
+        if (block.isBracket()) return false;
+        
+        // Примерный список типов блоков, которые могут иметь дочерние элементы
+        switch (block.getMaterialName()) {
+            case "OAK_PLANKS":  // CONDITION
+            case "OBSIDIAN":    // IF_VAR
+            case "REDSTONE_BLOCK": // IF_GAME
+            case "BRICKS":      // IF_MOB
+            case "EMERALD_BLOCK": // REPEAT
+            case "END_STONE":   // ELSE
+                return true;
+            default:
+                return false;
+        }
     }
     
-    /**
-     * Gets a string representation of a block's location for logging
-     */
-    private String getLocationString(CodeBlock block) {
-        // Find the location of this block in the placement handler's map
-        Map<Location, CodeBlock> blockMap = placementHandler.getBlockCodeBlocks();
-        for (Map.Entry<Location, CodeBlock> entry : blockMap.entrySet()) {
-            if (entry.getValue() == block) {
-                Location loc = entry.getKey();
-                return "(" + loc.getBlockX() + ", " + loc.getBlockZ() + ")";
-            }
-        }
-        return "unknown";
+    private String formatLoc(Location loc) {
+        if (loc == null) return "null";
+        return "(" + loc.getBlockX() + ", " + loc.getBlockZ() + ")";
     }
-    
-    /**
-     * Validates all connections in a world
-     * @param world The world to validate connections in
-     * @return true if all connections are valid, false otherwise
-     */
-    public boolean validateConnections(World world) {
-        if (world == null) {
-            return false;
-        }
-        
-        boolean isValid = true;
-        Map<Location, CodeBlock> worldBlocks = placementHandler.getBlockCodeBlocks();
-        
-        for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
-            Location location = entry.getKey();
-            CodeBlock block = entry.getValue();
-            
-            // Validate next block connection
-            CodeBlock nextBlock = block.getNextBlock();
-            if (nextBlock != null) {
-                // Check if the next block actually exists at the expected location
-                Location expectedLocation = getNextLocationInLine(location);
-                if (expectedLocation != null) {
-                    CodeBlock actualBlock = placementHandler.getCodeBlock(expectedLocation);
-                    if (actualBlock != nextBlock) {
-                        LOGGER.warning("Invalid next block connection at " + location);
-                        isValid = false;
-                    }
-                }
-            }
-            
-            // Validate child block connections
-            for (CodeBlock child : block.getChildren()) {
-                if (child == null) {
-                    LOGGER.warning("Null child block found at " + location);
-                    isValid = false;
-                }
-            }
-        }
-        
-        return isValid;
-    }
-    
-    /**
-     * Rebuilds all connections in a world
-     * @param world The world to rebuild connections in
-     */
-    public void rebuildConnections(World world) {
-        if (world == null) {
-            return;
-        }
-        
-        LOGGER.fine("Rebuilding connections in world: " + world.getName());
-        
-        // Clear all existing connections
-        Map<Location, CodeBlock> worldBlocks = placementHandler.getBlockCodeBlocks();
-        for (CodeBlock block : worldBlocks.values()) {
-            block.setNextBlock(null);
-            block.setChildren(new ArrayList<>());
-        }
-        
-        // Rebuild all connections by re-processing each block
-        for (Map.Entry<Location, CodeBlock> entry : worldBlocks.entrySet()) {
-            Location location = entry.getKey();
-            CodeBlock block = entry.getValue();
-            
-            // Re-establish horizontal connections
-            Location prevLocation = getPreviousLocationInLine(location);
-            if (prevLocation != null) {
-                CodeBlock prevBlock = placementHandler.getCodeBlock(prevLocation);
-                if (prevBlock != null && !prevBlock.isBracket()) {
-                    prevBlock.setNextBlock(block);
-                }
-            }
-            
-            Location nextLocation = getNextLocationInLine(location);
-            if (nextLocation != null) {
-                CodeBlock nextBlock = placementHandler.getCodeBlock(nextLocation);
-                if (nextBlock != null && !nextBlock.isBracket()) {
-                    block.setNextBlock(nextBlock);
-                }
-            }
-            
-            // Re-establish vertical connections
-            CodeBlock parentBlock = findParentBlock(location);
-            if (parentBlock != null) {
-                parentBlock.addChild(block);
-            }
-        }
-        
-        LOGGER.fine("Finished rebuilding connections in world: " + world.getName());
+     private String formatLoc(int x, int z) {
+        return "(" + x + ", " + z + ")";
     }
 }

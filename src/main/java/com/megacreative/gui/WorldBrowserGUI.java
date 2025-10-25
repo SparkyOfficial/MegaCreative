@@ -24,6 +24,8 @@ import java.util.List;
  *
  * GUI zum Durchsuchen von Welten
  * Implementiert ManagedGUIInterface für die Integration mit GUIManager
+ * 
+ * @author Андрій Будильников
  */
 public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
     
@@ -203,19 +205,42 @@ public class WorldBrowserGUI implements GUIManager.ManagedGUIInterface {
         } else if (displayName.contains("Информация")) {
             // Do nothing for info item
         } else {
-            // TODO: Implement world interaction logic
-            // This is a placeholder for future implementation
-            // Possible implementation: Handle world item clicks and open world management GUI
             // Handle world item clicks
-            // TODO: Implement world interaction logic
+            // Find the world that was clicked
+            List<CreativeWorld> publicWorlds = plugin.getServiceRegistry().getWorldManager().getAllPublicWorlds();
+            int startIndex = page * 28;
+            int slotIndex = event.getSlot() - 10;
+            
+            // Adjust slot index for row breaks
+            if (event.getSlot() >= 18) {
+                slotIndex -= 2 * ((event.getSlot() - 10) / 9);
+            }
+            
+            int worldIndex = startIndex + slotIndex;
+            
+            if (worldIndex >= 0 && worldIndex < publicWorlds.size()) {
+                CreativeWorld selectedWorld = publicWorlds.get(worldIndex);
+                
+                // Left click - teleport to world
+                if (event.isLeftClick()) {
+                    // Switch player to the selected world
+                    plugin.getServiceRegistry().getWorldManager().switchToPlayWorld(player, selectedWorld.getId());
+                    player.closeInventory();
+                    player.sendMessage("§aВы телепортированы в мир " + selectedWorld.getName());
+                } 
+                // Right click - open world management GUI
+                else if (event.isRightClick()) {
+                    // Open world management GUI
+                    WorldActionsGUI actionsGUI = new WorldActionsGUI(plugin, player, selectedWorld);
+                    actionsGUI.open();
+                }
+            }
         }
     }
     
     @Override
     public void onInventoryClose(InventoryCloseEvent event) {
-        // TODO: Implement cleanup logic for WorldBrowserGUI
-        // This is a placeholder for future implementation
-        // Possible implementation: Clean up resources and save any changes when GUI is closed
-        // Clean up if needed
+        // Clean up resources when GUI is closed
+        plugin.getServiceRegistry().getGuiManager().unregisterGUI(player);
     }
 }
