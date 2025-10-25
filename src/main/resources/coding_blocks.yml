@@ -72,8 +72,6 @@ blocks:
       - "sendCustomTitle"
       - "playCustomSound"
       - "spawnParticleEffect"
-      - "sendActionBar"
-      - "executeAsyncCommand"
   
   OAK_PLANKS:
     name: "&6&lУсловие"
@@ -198,7 +196,6 @@ blocks:
     description: "Сохранение и управление функциями"
     actions:
       - "saveFunction"
-      - "callFunction"
   
   END_STONE:
     name: "&e&lИначе"
@@ -1478,72 +1475,18 @@ advanced_actions:
       spread: { type: "NUMBER", slot: 2, description: "Spread radius" }
       speed: { type: "NUMBER", slot: 3, description: "Particle speed" }
 
-  sendActionBar:
-    material: EXPERIENCE_BOTTLE
-    type: "ACTION"
-    displayName: "&e&lSend Action Bar"
-    description: "Displays text in player's action bar"
-    category: "communication_actions"
-    parameters:
-      message: { type: "TEXT", slot: 0, description: "Action bar message" }
-      duration: { type: "NUMBER", slot: 1, description: "Display duration (ticks)" }
 
-  executeAsyncCommand:
-    material: COMMAND_BLOCK
-    type: "ACTION"
-    displayName: "&6&lExecute Async Command"
-    description: "Executes commands asynchronously to prevent lag"
-    category: "system_actions"
-    parameters:
-      command: { type: "TEXT", slot: 0, description: "Command to execute" }
-      delay: { type: "NUMBER", slot: 1, description: "Delay before execution (ticks)" }
+
+
 
 # ============================================
 # ADVANCED CONDITION BLOCKS
 # ============================================
 
 advanced_conditions:
-  checkPlayerStats:
-    material: PLAYER_HEAD
-    type: "CONDITION"
-    displayName: "&b&lPlayer Statistics"
-    description: "Checks player statistics and achievements"
-    category: "player_conditions"
-    parameters:
-      stat_type: { type: "TEXT", slot: 0, description: "Statistic type" }
-      value: { type: "NUMBER", slot: 1, description: "Comparison value" }
-      operator: { type: "TEXT", slot: 2, description: "Comparison operator (>=, <=, ==)" }
 
-  checkWorldWeather:
-    material: CLOCK
-    type: "CONDITION"
-    displayName: "&7&lWeather Condition"
-    description: "Checks current weather in world"
-    category: "world_conditions"
-    parameters:
-      weather: { type: "TEXT", slot: 0, description: "clear/rain/thunder" }
-      world: { type: "TEXT", slot: 1, description: "World name" }
 
-  checkPlayerInventory:
-    material: CHEST
-    type: "CONDITION"
-    displayName: "&6&lInventory Check"
-    description: "Checks player inventory contents"
-    category: "inventory_conditions"
-    parameters:
-      item: { type: "ITEM", slot: 0, description: "Item to check for" }
-      amount: { type: "NUMBER", slot: 1, description: "Required amount" }
-      check_type: { type: "TEXT", slot: 2, description: "has/missing/exact" }
 
-  checkServerOnline:
-    material: COMPARATOR
-    type: "CONDITION"
-    displayName: "&c&lServer Player Count"
-    description: "Checks number of online players"
-    category: "server_conditions"
-    parameters:
-      count: { type: "NUMBER", slot: 0, description: "Player count threshold" }
-      operator: { type: "TEXT", slot: 1, description: "Comparison operator" }
 
 # ============================================
 # CONTROL FLOW BLOCKS
@@ -1647,15 +1590,6 @@ data_blocks:
 # ============================================
 
 integration_blocks:
-  worldGuardRegionCheck:
-    material: SHIELD
-    type: "CONDITION"
-    displayName: "&9&lWorldGuard Region"
-    description: "Checks if player is in a WorldGuard region"
-    category: "integration"
-    parameters:
-      region_name: { type: "TEXT", slot: 0, description: "Region identifier" }
-      world: { type: "TEXT", slot: 1, description: "World name" }
 
   economyTransaction:
     material: GOLD_INGOT
