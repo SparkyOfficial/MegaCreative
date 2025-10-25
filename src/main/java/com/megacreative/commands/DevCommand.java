@@ -1,6 +1,7 @@
 package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
+import com.megacreative.coding.SimpleScriptCompiler;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
@@ -73,6 +74,12 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
+        // Check for compile command
+        if (args.length > 0 && "compile".equals(args[0])) {
+            compileScripts(player);
+            return true;
+        }
+        
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
@@ -90,6 +97,49 @@ public class DevCommand implements CommandExecutor {
         plugin.getServiceRegistry().getWorldManager().switchToDevWorld(player, creativeWorld.getId());
         
         return true;
+    }
+    
+    /**
+     * Compiles all scripts in the current world
+     */
+    private void compileScripts(Player player) {
+        try {
+            World currentWorld = player.getWorld();
+            CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
+            
+            if (creativeWorld == null) {
+                player.sendMessage("§cВы не находитесь в мире MegaCreative!");
+                return;
+            }
+            
+            // Create the script compiler
+            SimpleScriptCompiler compiler = new SimpleScriptCompiler(
+                plugin,
+                plugin.getServiceRegistry().getBlockConfigService(),
+                plugin.getServiceRegistry().getBlockPlacementHandler()
+            );
+            
+            // Compile all scripts in the world
+            player.sendMessage("§eКомпиляция скриптов...");
+            java.util.List<com.megacreative.coding.CodeScript> scripts = compiler.compileWorldScripts(currentWorld);
+            
+            // Save the compiled scripts
+            compiler.saveScriptsToWorld(currentWorld, scripts);
+            
+            player.sendMessage("§aСкрипты скомпилированы успешно!");
+            player.sendMessage("§7Найдено скриптов: " + scripts.size());
+            
+            // Show details of each script
+            for (int i = 0; i < scripts.size(); i++) {
+                com.megacreative.coding.CodeScript script = scripts.get(i);
+                int blockCount = script.getBlocks().size();
+                player.sendMessage("§7  " + (i + 1) + ". " + script.getName() + " (" + blockCount + " блоков)");
+            }
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка компиляции скриптов: " + e.getMessage());
+            plugin.getLogger().severe("Ошибка компиляции скриптов: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -144,6 +194,8 @@ public class DevCommand implements CommandExecutor {
         player.sendMessage("§7/dev tools §8- §fТо же, что и refresh");
         player.sendMessage("§7/dev variables §8- §fОткрыть меню переменных");
         player.sendMessage("§7/dev switch §8- §fПереключиться в режим разработки (дуальные миры)");
+        player.sendMessage("§7/dev compile §8- §fСкомпилировать скрипты в текущем мире");
+        player.sendMessage("§7/dev testscript §8- §fСоздать тестовый скрипт");
         player.sendMessage("§7/dev help §8- §fПоказать эту справку");
         player.sendMessage("§8§m                                                        ");
     }
