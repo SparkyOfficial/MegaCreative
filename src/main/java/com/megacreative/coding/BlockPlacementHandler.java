@@ -5,14 +5,14 @@ import com.megacreative.core.ServiceRegistry;
 import com.megacreative.interfaces.ITrustedPlayerManager;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
+import com.megacreative.models.WorldMode;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.events.CodeBlockPlacedEvent;
 import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.events.MegaBlockPlaceEvent;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.gui.coding.ActionSelectionGUI;
-import com.megacreative.gui.coding.CodeBlockGUI;
+import com.megacreative.interfaces.IWorldManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -46,6 +46,8 @@ public class BlockPlacementHandler implements Listener {
     
     private ITrustedPlayerManager trustedPlayerManager;
     private BlockConfigService blockConfigService;
+    private PlayerModeManager playerModeManager;
+    private IWorldManager worldManager;
     
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
@@ -65,6 +67,20 @@ public class BlockPlacementHandler implements Listener {
             blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
         }
         return blockConfigService;
+    }
+    
+    private PlayerModeManager getPlayerModeManager() {
+        if (playerModeManager == null && plugin != null && plugin.getServiceRegistry() != null) {
+            playerModeManager = plugin.getServiceRegistry().getPlayerModeManager();
+        }
+        return playerModeManager;
+    }
+    
+    private IWorldManager getWorldManager() {
+        if (worldManager == null && plugin != null && plugin.getServiceRegistry() != null) {
+            worldManager = plugin.getServiceRegistry().getWorldManager();
+        }
+        return worldManager;
     }
     
     /**
@@ -128,6 +144,59 @@ public class BlockPlacementHandler implements Listener {
         
         return plugin.getServiceRegistry().getConditionFactory().createCondition(conditionId) != null;
     }
+    
+    /**
+     * Checks if the player is in a development world and has the right mode to place code blocks
+     * @param player The player to check
+     * @return true if the player can place code blocks, false otherwise
+     */
+    private boolean canPlaceCodeBlocks(Player player) {
+        // First check if player is in a dev world
+        if (!isInDevWorld(player)) {
+            return false;
+        }
+        
+        // Get player mode manager
+        PlayerModeManager modeManager = getPlayerModeManager();
+        if (modeManager == null) {
+            return false;
+        }
+        
+        // Check if player is in DEV mode (coding mode)
+        return modeManager.getMode(player) == PlayerModeManager.PlayerMode.DEV;
+    }
+    
+    /**
+     * Checks if the player is in a development world and has the right mode to break code blocks
+     * @param player The player to check
+     * @return true if the player can break code blocks, false otherwise
+     */
+    private boolean canBreakCodeBlocks(Player player) {
+        // First check if player is in a dev world
+        if (!isInDevWorld(player)) {
+            return false;
+        }
+        
+        // Get player mode manager
+        PlayerModeManager modeManager = getPlayerModeManager();
+        if (modeManager == null) {
+            return false;
+        }
+        
+        // Check if player is in DEV mode (coding mode)
+        return modeManager.getMode(player) == PlayerModeManager.PlayerMode.DEV;
+    }
+    
+    /**
+     * Checks if the location is within the designated coding area
+     * @param location The location to check
+     * @return true if the location is in the coding area, false otherwise
+     */
+    private boolean isInCodingArea(Location location) {
+        // For now, we'll check if the Y coordinate is at the platform level (64)
+        // In a more sophisticated implementation, you might want to check specific regions
+        return location.getBlockY() == 64;
+    }
 
     /**
      * Создает CodeBlock и генерирует событие CodeBlockPlacedEvent.
@@ -141,14 +210,30 @@ public class BlockPlacementHandler implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.isCancelled() || !isInDevWorld(event.getPlayer())) {
+        Player player = event.getPlayer();
+        
+        // Check if player can place code blocks
+        if (!canPlaceCodeBlocks(player)) {
+            // If in PLAY mode or not in dev world, don't interfere with normal block placement
+            return;
+        }
+        
+        // If the event is already cancelled, don't process it
+        if (event.isCancelled()) {
             return;
         }
 
-        Player player = event.getPlayer();
         Block block = event.getBlockPlaced();
 
+        // Check if the location is within the designated coding area
+        if (!isInCodingArea(block.getLocation())) {
+            player.sendMessage("§cCode blocks can only be placed on the coding platform (Y=64)!");
+            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+            event.setCancelled(true);
+            return;
+        }
         
+        // Check if the placement surface is correct
         if (!isCorrectPlacementSurface(block)) {
             player.sendMessage("§cThis block can only be placed on the correct surface!");
             player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
@@ -159,22 +244,23 @@ public class BlockPlacementHandler implements Listener {
         CodeBlock newCodeBlock = createCodeBlockFor(block);
         
         if (newCodeBlock == null) {
-            
-            player.sendMessage("§cYou can only place special coding blocks!");
-            player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
-            event.setCancelled(true);
+            // Allow normal blocks to be placed in DEV mode outside of coding area
+            // But prevent special coding blocks from being placed outside coding area
+            if (isSpecialCodingBlock(block.getType())) {
+                player.sendMessage("§cYou can only place special coding blocks on the coding platform!");
+                player.playSound(block.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 0.8f);
+                event.setCancelled(true);
+            }
             return;
         }
 
-        
+        // Store the code block
         blockCodeBlocks.put(block.getLocation(), newCodeBlock);
-        // Use fine logging instead of info to reduce spam
         log.fine("Created CodeBlock at " + block.getLocation() + " with material " + newCodeBlock.getMaterialName());
         
-        
+        // Fire the custom event
         CodeBlockPlacedEvent placedEvent = new CodeBlockPlacedEvent(player, newCodeBlock, block.getLocation());
         plugin.getServer().getPluginManager().callEvent(placedEvent);
-        // Use fine logging instead of info to reduce spam
         log.fine("Fired CodeBlockPlacedEvent for block at " + block.getLocation());
 
         player.sendMessage("§a✓ Code block placed!");
@@ -189,13 +275,22 @@ public class BlockPlacementHandler implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
-        if (event.isCancelled() || !isInDevWorld(event.getPlayer())) {
+        Player player = event.getPlayer();
+        
+        // Check if player can break code blocks
+        if (!canBreakCodeBlocks(player)) {
+            // If in PLAY mode or not in dev world, don't interfere with normal block breaking
+            return;
+        }
+        
+        // If the event is already cancelled, don't process it
+        if (event.isCancelled()) {
             return;
         }
         
         Location loc = event.getBlock().getLocation();
-        Player player = event.getPlayer();
         
+        // Check if this is a protected bracket
         if (isProtectedBracket(loc)) {
             event.setCancelled(true);
             player.sendMessage("§cBrackets cannot be broken directly!");
@@ -203,45 +298,72 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
 
-        
+        // Check if this is a code block
         if (blockCodeBlocks.containsKey(loc)) {
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
             
-            
+            // Fire the custom event
             CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
             plugin.getServer().getPluginManager().callEvent(brokenEvent);
             
             player.sendMessage("§cCode block removed!");
-            // Add debug message to see what type of block was removed
             player.sendMessage("§cRemoved block: " + removedBlock.getMaterialName() + " with action: " + removedBlock.getAction());
+            
+            // Rebuild connections around this location
+            rebuildConnectionsAround(loc);
         }
         
-        
+        // Handle bracket blocks
         else if (event.getBlock().getType() == Material.PISTON || event.getBlock().getType() == Material.STICKY_PISTON) {
-            
+            // Check if this is a protected bracket
             if (isProtectedBracket(loc)) {
-                
                 event.setCancelled(true);
                 player.sendMessage("§cBrackets cannot be broken directly!");
                 player.playSound(loc, org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
                 return;
             }
             
-            
+            // Remove the code block if it exists
             CodeBlock removedBlock = blockCodeBlocks.remove(loc);
-            
             
             if (removedBlock != null) {
                 CodeBlockBrokenEvent brokenEvent = new CodeBlockBrokenEvent(player, removedBlock, loc);
                 plugin.getServer().getPluginManager().callEvent(brokenEvent);
             }
             
-            
             player.sendMessage("§cBracket removed!");
             player.playSound(loc, org.bukkit.Sound.BLOCK_PISTON_CONTRACT, 0.8f, 1.2f);
         }
     }
     
+    /**
+     * Rebuilds connections around a broken block location
+     * @param location The location where a block was broken
+     */
+    private void rebuildConnectionsAround(Location location) {
+        // This method should trigger a recompilation of scripts in the area
+        // For now, we'll just log that it should happen
+        log.info("Rebuilding connections around " + location + " - this should trigger script recompilation");
+        
+        // In a more sophisticated implementation, you would:
+        // 1. Find all scripts that might be affected by this block removal
+        // 2. Trigger recompilation of those scripts
+        // 3. Update any UI that might be showing script structure
+    }
+    
+    /**
+     * Checks if a material is a special coding block
+     * @param material The material to check
+     * @return true if it's a special coding block, false otherwise
+     */
+    private boolean isSpecialCodingBlock(Material material) {
+        BlockConfigService configService = getBlockConfigService();
+        if (configService == null) {
+            return false;
+        }
+        
+        return configService.isCodeBlock(material);
+    }
     
     private CodeBlock createCodeBlockFor(Block block) {
         BlockConfigService configService = getBlockConfigService();
@@ -249,14 +371,14 @@ public class BlockPlacementHandler implements Listener {
             return null;
         }
 
-        
+        // Handle bracket blocks
         if (block.getType() == Material.PISTON || block.getType() == Material.STICKY_PISTON) {
             CodeBlock bracket = new CodeBlock(block.getType().name(), "BRACKET");
             bracket.setBracketType(CodeBlock.BracketType.OPEN); 
             return bracket;
         }
         
-        
+        // Handle regular code blocks
         if (configService.isCodeBlock(block.getType())) {
             return new CodeBlock(block.getType().name(), "NOT_SET");
         }
@@ -279,8 +401,6 @@ public class BlockPlacementHandler implements Listener {
         Player player = event.getPlayer();
         if (!isInDevWorld(player)) return;
 
-        
-
         Location location = event.getClickedBlock().getLocation();
         if (!blockCodeBlocks.containsKey(location)) {
             return;
@@ -293,28 +413,15 @@ public class BlockPlacementHandler implements Listener {
         player.sendMessage("§aInteracted with code block: " + codeBlock.getMaterialName() + " with action: " + codeBlock.getAction());
         log.fine("Player " + player.getName() + " interacted with code block at " + location + " with material " + codeBlock.getMaterialName() + " and action " + codeBlock.getAction());
         
-        
+        // Handle bracket blocks
         if (codeBlock.isBracket()) {
             toggleBracketType(codeBlock, event.getClickedBlock(), player);
             return;
         }
         
-        
-
-        String blockId = getBlockIdentifier(codeBlock);
-
-        
-        if (blockId == null || blockId.equals("NOT_SET")) {
-            new ActionSelectionGUI(plugin, player, location, Material.getMaterial(codeBlock.getMaterialName())).open();
-            return;
-        }
-
-        
-        String blockType = determineBlockType(codeBlock, blockId);
-
-        
-        CodeBlockGUI parameterGUI = new CodeBlockGUI(plugin, player, location, blockId, blockType);
-        parameterGUI.open();
+        // For now, we're removing the GUI functionality
+        // In the future, this will be replaced with a new GUI system
+        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
     }
     
     /**

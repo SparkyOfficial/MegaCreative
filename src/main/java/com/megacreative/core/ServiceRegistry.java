@@ -27,7 +27,6 @@ import com.megacreative.services.BlockConfigService;
 import com.megacreative.coding.functions.AdvancedFunctionManager;
 import com.megacreative.gui.interactive.InteractiveGUIManager;
 import com.megacreative.gui.interactive.ReferenceSystemStyleGUI;
-import com.megacreative.gui.coding.EnhancedActionParameterGUI;
 import com.megacreative.services.MessagingService;
 import com.megacreative.MegaCreative;
 import com.megacreative.tools.CodeBlockClipboard;
@@ -541,10 +540,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
     
     public ReferenceSystemStyleGUI getReferenceSystemStyleGUI() {
         return dependencyContainer.resolve(ReferenceSystemStyleGUI.class);
-    }
-    
-    public EnhancedActionParameterGUI getEnhancedActionParameterGUI() {
-        return dependencyContainer.resolve(EnhancedActionParameterGUI.class);
     }
     
     public ReferenceSystemEventManager getReferenceSystemEventManager() {

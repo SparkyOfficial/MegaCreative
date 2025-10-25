@@ -6,7 +6,6 @@ import com.megacreative.coding.values.DataValue;
 import com.megacreative.coding.values.types.*;
 import com.megacreative.services.BlockConfigService;
 import com.megacreative.services.BlockConfigService.ParameterConfig;
-import com.megacreative.gui.coding.ActionSelectionGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -67,10 +66,14 @@ public class BlockConfigManager implements Listener {
         String currentAction = codeBlock.getAction();
         if (currentAction == null || currentAction.equals("Настройка...") || currentAction.isEmpty()) {
             
-            showActionSelectionGUI(player, codeBlock, blockLocation);
+            // For now, we're removing the GUI functionality
+            // In the future, this will be replaced with a new GUI system
+            player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
         } else {
             
-            showParameterConfigGUI(player, codeBlock, blockLocation);
+            // For now, we're removing the GUI functionality
+            // In the future, this will be replaced with a new GUI system
+            player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
         }
     }
     
@@ -79,24 +82,9 @@ public class BlockConfigManager implements Listener {
      */
     private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
         
-        var blockConfigService = plugin.getServiceRegistry().getBlockConfigService();
-        List<String> availableActions = blockConfigService.getActionsForMaterial(org.bukkit.Material.getMaterial(codeBlock.getMaterialName()));
-        
-        if (availableActions.isEmpty()) {
-            player.sendMessage("§cОшибка: нет доступных действий для данного типа блока.");
-            return;
-        }
-        
-        player.sendMessage("§eВыберите действие для блока...");
-        
-        
-        ActionSelectionGUI actionGUI = new ActionSelectionGUI(
-            plugin, 
-            player, 
-            blockLocation, 
-            org.bukkit.Material.getMaterial(codeBlock.getMaterialName())
-        );
-        actionGUI.open();
+        // For now, we're removing the GUI functionality
+        // In the future, this will be replaced with a new GUI system
+        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
     }
     
     /**
@@ -104,30 +92,9 @@ public class BlockConfigManager implements Listener {
      */
     private void showParameterConfigGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
         
-        Inventory configInventory = Bukkit.createInventory(null, 27, "§8Настройка: " + codeBlock.getAction());
-
-        
-        loadParametersFromGui(configInventory, codeBlock);
-        
-        
-        if (codeBlock.getConfigItems() != null) {
-            for (Map.Entry<Integer, ItemStack> entry : codeBlock.getConfigItems().entrySet()) {
-                if (entry.getKey() < configInventory.getSize()) {
-                    configInventory.setItem(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        
-        
-        addPlaceholderItems(configInventory, codeBlock);
-        
-        
-        configuringBlocks.put(player.getUniqueId(), blockLocation);
-        player.openInventory(configInventory);
-        
-        player.sendMessage("§e§l!§r §eНастройте блок, поместив предметы в инвентарь.");
-        player.sendMessage("§7Предметы будут использоваться как параметры для действия '" + codeBlock.getAction() + "'");
-        player.sendMessage("§7§oПодсказка: Используйте 27 слотов для сложных конфигураций");
+        // For now, we're removing the GUI functionality
+        // In the future, this will be replaced with a new GUI system
+        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
     }
     
     /**

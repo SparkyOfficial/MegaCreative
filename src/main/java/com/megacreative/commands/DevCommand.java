@@ -81,6 +81,22 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
+        // Check for listblocks command
+        if (args.length > 0 && "listblocks".equals(args[0])) {
+            listCodeBlocks(player);
+            return true;
+        }
+        
+        // Check for run command
+        if (args.length > 0 && "run".equals(args[0])) {
+            if (args.length > 1) {
+                runScript(player, args[1]);
+            } else {
+                player.sendMessage("§cИспользование: /dev run <имя скрипта>");
+            }
+            return true;
+        }
+        
         World currentWorld = player.getWorld();
         CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
        
@@ -142,6 +158,113 @@ public class DevCommand implements CommandExecutor {
         } catch (Exception e) {
             player.sendMessage("§cОшибка компиляции скриптов: " + e.getMessage());
             plugin.getLogger().severe("Ошибка компиляции скриптов: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Lists all code blocks in the current world
+     */
+    private void listCodeBlocks(Player player) {
+        try {
+            World currentWorld = player.getWorld();
+            
+            // Get the block placement handler
+            com.megacreative.coding.BlockPlacementHandler placementHandler = 
+                plugin.getServiceRegistry().getBlockPlacementHandler();
+            
+            // Get all code blocks
+            java.util.Map<org.bukkit.Location, com.megacreative.coding.CodeBlock> codeBlocks = 
+                placementHandler.getBlockCodeBlocks();
+            
+            player.sendMessage("§eСписок всех блоков кода в мире:");
+            player.sendMessage("§7Всего блоков: " + codeBlocks.size());
+            
+            // Filter blocks by world and display them
+            int count = 0;
+            for (java.util.Map.Entry<org.bukkit.Location, com.megacreative.coding.CodeBlock> entry : codeBlocks.entrySet()) {
+                org.bukkit.Location loc = entry.getKey();
+                com.megacreative.coding.CodeBlock block = entry.getValue();
+                
+                // Only show blocks in the current world
+                if (loc.getWorld().equals(currentWorld)) {
+                    count++;
+                    player.sendMessage("§7" + count + ". " + block.getMaterialName() + " (" + block.getAction() + ") at " + 
+                        loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ());
+                }
+            }
+            
+            if (count == 0) {
+                player.sendMessage("§7В текущем мире нет блоков кода.");
+            }
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка при получении списка блоков: " + e.getMessage());
+            plugin.getLogger().severe("Ошибка при получении списка блоков: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Runs a specific script by name
+     */
+    private void runScript(Player player, String scriptName) {
+        try {
+            World currentWorld = player.getWorld();
+            CreativeWorld creativeWorld = findCreativeWorld(currentWorld);
+            
+            if (creativeWorld == null) {
+                player.sendMessage("§cВы не находитесь в мире MegaCreative!");
+                return;
+            }
+            
+            // Get compiled scripts
+            java.util.List<com.megacreative.coding.CodeScript> scripts = creativeWorld.getScripts();
+            if (scripts == null || scripts.isEmpty()) {
+                player.sendMessage("§cВ мире нет скомпилированных скриптов. Сначала выполните /dev compile");
+                return;
+            }
+            
+            // Find script by name or event type
+            com.megacreative.coding.CodeScript targetScript = null;
+            for (com.megacreative.coding.CodeScript script : scripts) {
+                if (script != null && script.getRootBlock() != null) {
+                    // Check if it matches by name or action
+                    if (scriptName.equals(script.getName()) || 
+                        scriptName.equals(script.getRootBlock().getAction())) {
+                        targetScript = script;
+                        break;
+                    }
+                }
+            }
+            
+            if (targetScript == null) {
+                player.sendMessage("§cСкрипт '" + scriptName + "' не найден.");
+                return;
+            }
+            
+            // Execute the script
+            player.sendMessage("§eЗапуск скрипта: " + targetScript.getName());
+            
+            // Get the script engine
+            com.megacreative.coding.ScriptEngine scriptEngine = 
+                plugin.getServiceRegistry().getScriptEngine();
+            
+            // Execute the script
+            java.util.concurrent.CompletableFuture<com.megacreative.coding.executors.ExecutionResult> future = 
+                scriptEngine.executeScript(targetScript, player, "manual");
+            
+            // Handle the result
+            future.thenAccept(result -> {
+                if (result.isSuccess()) {
+                    player.sendMessage("§aСкрипт выполнен успешно!");
+                } else {
+                    player.sendMessage("§cОшибка выполнения скрипта: " + result.getMessage());
+                }
+            });
+            
+        } catch (Exception e) {
+            player.sendMessage("§cОшибка при запуске скрипта: " + e.getMessage());
+            plugin.getLogger().severe("Ошибка при запуске скрипта: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -232,6 +355,8 @@ public class DevCommand implements CommandExecutor {
         player.sendMessage("§7/dev switch §8- §fПереключиться в режим разработки (дуальные миры)");
         player.sendMessage("§7/dev compile §8- §fСкомпилировать скрипты в текущем мире");
         player.sendMessage("§7/dev testscript §8- §fСоздать тестовый скрипт");
+        player.sendMessage("§7/dev listblocks §8- §fПоказать все блоки кода в мире");
+        player.sendMessage("§7/dev run <script> §8- §fЗапустить скрипт вручную");
         player.sendMessage("§7/dev help §8- §fПоказать эту справку");
         player.sendMessage("§8§m                                                        ");
     }
