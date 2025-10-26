@@ -4,118 +4,65 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
-
-import java.util.List;
-import java.util.ArrayList;
 
 /**
- * Action for removing items from a player's inventory.
- * This action removes a list of items from the player's inventory based on parameters.
+ * Action to remove items from a player's inventory
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "removeItems", displayName = "§aRemove Items", type = BlockType.ACTION)
+@BlockMeta(id = "removeItems", displayName = "§bRemove Items", type = BlockType.ACTION)
 public class RemoveItemsAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get all parameters
+            DataValue itemValue = block.getParameter("item");
+            DataValue amountValue = block.getParameter("amount");
             
-            DataValue itemsValue = block.getParameter("items");
-            
-            if (itemsValue == null || itemsValue.isEmpty()) {
-                return ExecutionResult.error("No items configured for removal");
-            }
-
-            List<ItemStack> itemsToRemove = new ArrayList<>();
-            
-            
-            if (itemsValue instanceof ListValue) {
-                
-                ListValue listValue = (ListValue) itemsValue;
-                List<DataValue> itemList = listValue.getValues();
-                for (DataValue itemValue : itemList) {
-                    ItemStack item = parseItem(itemValue);
-                    if (item != null) {
-                        itemsToRemove.add(item);
-                    }
-                }
-            } else {
-                
-                ItemStack item = parseItem(itemsValue);
-                if (item != null) {
-                    itemsToRemove.add(item);
-                }
-            }
-
-            if (itemsToRemove.isEmpty()) {
-                return ExecutionResult.error("No valid items to remove");
-            }
-
-            int removedCount = 0;
-            
-            
-            for (ItemStack item : itemsToRemove) {
-                if (item != null && item.getType().isItem()) {
-                    if (player.getInventory().containsAtLeast(item, item.getAmount())) {
-                        player.getInventory().removeItem(item);
-                        removedCount += item.getAmount();
-                    }
-                }
+            if (itemValue == null) {
+                return ExecutionResult.error("Missing required parameter: item");
             }
             
-            return ExecutionResult.success("Removed " + removedCount + " items from player's inventory");
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedItem = resolver.resolve(context, itemValue);
+            
+            String itemStr = resolvedItem.asString();
+            Material material = Material.matchMaterial(itemStr);
+            
+            if (material == null) {
+                return ExecutionResult.error("Invalid item material: " + itemStr);
+            }
+            
+            // Get amount (default to 1)
+            int amount = 1;
+            if (amountValue != null) {
+                DataValue resolvedAmount = resolver.resolve(context, amountValue);
+                amount = Math.max(1, resolvedAmount.asNumber().intValue());
+            }
+            
+            // Remove items
+            ItemStack itemToRemove = new ItemStack(material, amount);
+            int removed = player.getInventory().removeItem(itemToRemove).size();
+            
+            int actuallyRemoved = amount - removed;
+            
+            return ExecutionResult.success("Removed " + actuallyRemoved + " " + material.name() + "(s)");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to remove items: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Parses an item from a DataValue
-     */
-    private ItemStack parseItem(DataValue itemValue) {
-        try {
-            if (itemValue == null || itemValue.isEmpty()) {
-                return null;
-            }
-            
-            String itemStr = itemValue.asString();
-            // Fix for Qodana issue: Condition itemStr == null is always false
-            // This was a false positive - we need to properly check for empty strings
-            if (itemStr.isEmpty()) {
-                return null;
-            }
-            
-            
-            String[] parts = itemStr.split(":");
-            Material material = Material.valueOf(parts[0].toUpperCase());
-            
-            int amount = 1;
-            if (parts.length > 1) {
-                try {
-                    amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); 
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    // Use default amount when parsing fails
-                }
-            }
-            
-            return new ItemStack(material, amount);
-        } catch (Exception e) {
-            return null;
         }
     }
 }

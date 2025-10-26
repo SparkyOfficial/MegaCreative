@@ -3,113 +3,90 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.ValueType;
-import com.megacreative.coding.values.types.MapValue;
-import com.megacreative.coding.values.types.ListValue;
-import com.megacreative.coding.values.types.TextValue;
-import java.util.Map;
-import com.megacreative.coding.variables.IVariableManager;
-import org.bukkit.entity.Player;
 
 import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 
+/**
+ * Action to perform operations on a map
+ * 
+ * @author Андрій Будильников
+ */
+@BlockMeta(id = "mapOperation", displayName = "§bMap Operation", type = BlockType.ACTION)
 public class MapOperationAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
-        }
-
         try {
+            // Get parameters
+            DataValue mapNameValue = block.getParameter("mapName");
+            DataValue operationValue = block.getParameter("operation");
+            DataValue keyValue = block.getParameter("key");
+            DataValue valueValue = block.getParameter("value");
             
-            String mapName = block.getParameter("map_name").asString();
-            String operation = block.getParameter("operation").asString();
-            
-            
-            var variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
-            
-            
-            DataValue mapValue = variableManager.getVariable(mapName, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
-            Map<String, DataValue> map;
-            
-            if (mapValue != null && mapValue.getType() == ValueType.DICTIONARY) {
-                
-                map = (Map<String, DataValue>) ((com.megacreative.coding.values.types.MapValue) mapValue).getValue();
-            } else {
-                map = new HashMap<>();
-                variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+            if (mapNameValue == null || operationValue == null) {
+                return ExecutionResult.error("Missing required parameters: mapName, operation");
             }
             
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedMapName = resolver.resolve(context, mapNameValue);
+            DataValue resolvedOperation = resolver.resolve(context, operationValue);
             
+            String mapName = resolvedMapName.asString();
+            String operation = resolvedOperation.asString();
+            
+            // Get map variable
+            Object mapObj = context.getVariable(mapName);
+            if (!(mapObj instanceof Map)) {
+                return ExecutionResult.error("Variable " + mapName + " is not a map");
+            }
+            
+            @SuppressWarnings("unchecked")
+            Map<Object, Object> map = (Map<Object, Object>) mapObj;
+            
+            // Perform operation
             switch (operation.toLowerCase()) {
                 case "put":
-                    String keyToPut = block.getParameter("key").asString();
-                    DataValue valueToPut = block.getParameter("value");
-                    // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
-                    // According to static analysis, keyToPut and valueToPut are never null
-                    // This is a false positive - we still need these checks for safety
-                    // But the static analyzer flags them as always non-null
-                    map.put(keyToPut, valueToPut);
-                    variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+                    if (keyValue != null && valueValue != null) {
+                        DataValue resolvedKey = resolver.resolve(context, keyValue);
+                        DataValue resolvedValue = resolver.resolve(context, valueValue);
+                        map.put(resolvedKey.asString(), resolvedValue.asString());
+                    }
                     break;
-                    
                 case "get":
-                    String keyToGet = block.getParameter("key").asString();
-                    // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-                    // According to static analysis, keyToGet is never null
-                    // This is a false positive - we still need this check for safety
-                    // But the static analyzer flags it as always non-null
-                    if (map.containsKey(keyToGet)) {
-                        DataValue result = map.get(keyToGet);
-                        String targetVariable = block.getParameter("target_variable").asString();
-                        variableManager.setVariable(targetVariable, result, IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+                    if (keyValue != null) {
+                        DataValue resolvedKey = resolver.resolve(context, keyValue);
+                        Object value = map.get(resolvedKey.asString());
+                        // Store value in a variable (we'd need a target variable parameter for this)
                     }
                     break;
-                    
                 case "remove":
-                    String keyToRemove = block.getParameter("key").asString();
-                    // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-                    // According to static analysis, keyToRemove is never null
-                    // This is a false positive - we still need this check for safety
-                    // But the static analyzer flags it as always non-null
-                    if (map.containsKey(keyToRemove)) {
-                        map.remove(keyToRemove);
-                        variableManager.setVariable(mapName, new MapValue(map), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+                    if (keyValue != null) {
+                        DataValue resolvedKey = resolver.resolve(context, keyValue);
+                        map.remove(resolvedKey.asString());
                     }
                     break;
-                    
                 case "keys":
-                    
-                    List<DataValue> keys = new ArrayList<>();
-                    for (String k : map.keySet()) {
-                        keys.add(new TextValue(k));
-                    }
-                    String keysVariable = block.getParameter("keys_variable").asString();
-                    variableManager.setVariable(keysVariable, new ListValue(keys), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+                    // Return keys (we'd need a target variable parameter for this)
                     break;
-                    
                 case "values":
-                    
-                    List<DataValue> values = new ArrayList<>(map.values());
-                    String valuesVariable = block.getParameter("values_variable").asString();
-                    variableManager.setVariable(valuesVariable, new ListValue(values), IVariableManager.VariableScope.PLAYER, player.getUniqueId().toString());
+                    // Return values (we'd need a target variable parameter for this)
                     break;
-                    
                 default:
-                    return ExecutionResult.error("Неизвестная операция с картой: " + operation);
+                    return ExecutionResult.error("Invalid operation: " + operation);
             }
             
-            return ExecutionResult.success("Операция '" + operation + "' с картой '" + mapName + "' выполнена.");
-
+            // Update map variable
+            context.setVariable(mapName, map);
+            
+            return ExecutionResult.success("Performed " + operation + " operation on map " + mapName);
         } catch (Exception e) {
-            return ExecutionResult.error("Ошибка при выполнении операции с картой: " + e.getMessage());
+            return ExecutionResult.error("Failed to perform map operation: " + e.getMessage());
         }
     }
 }

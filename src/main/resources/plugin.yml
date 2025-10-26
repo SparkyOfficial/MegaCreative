@@ -282,3 +282,12 @@ commands:
     usage: /cc <message>
     permission: megacreative.user
     aliases: [globalchat, gchat]
+
+  test:
+    description: Test script compilation and execution
+    usage: |
+      &6/test compile &f- Test script compilation
+      &6/test actions &f- Test action registration
+      &6/test conditions &f- Test condition registration
+    permission: megacreative.admin
+    aliases: [tst]

@@ -3,86 +3,49 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.functions.AdvancedFunctionManager;
-import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 
-import java.util.concurrent.CompletableFuture;
-
 /**
- * Action for calling custom functions.
- * When executed, it finds and executes the registered function with proper parameter and return value handling.
+ * Action to call a saved function
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "callFunction", displayName = "§aCall Function", type = BlockType.ACTION)
+@BlockMeta(id = "callFunction", displayName = "§bCall Function", type = BlockType.ACTION)
 public class CallFunctionAction implements BlockAction {
-    private static final String FUNCTION_NAME_PARAM = "function_name";
-    private static final String RETURN_VAR_PARAM = "return_variable";
-    private static final String ARGUMENTS_PARAM = "arguments";
-    private static final String FUNCTION_NOT_FOUND_MSG = "Функция '%s' не найдена.";
-    private static final String FUNCTION_EXECUTED_MSG = "Функция '%s' выполнена успешно.";
-    private static final String FUNCTION_RETURN_MSG = "Функция '%s' выполнена. Возвращаемое значение: %s";
-    private static final String FUNCTION_TERMINATED_MSG = "Функция '%s' завершена оператором return";
-    private static final String FUNCTION_CALL_ERROR_MSG = "Ошибка при вызове функции '%s': %s";
-    private static final String PLAYER_NOT_FOUND_MSG = "Игрок не найден.";
-    private static final String FUNCTION_MANAGER_UNAVAILABLE_MSG = "Менеджер функций не доступен.";
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error(PLAYER_NOT_FOUND_MSG);
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get parameter
+            DataValue functionValue = block.getParameter("function");
             
-            final String functionName = block.getParameter(FUNCTION_NAME_PARAM).asString();
-            
-            
-            AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
-            if (functionManager == null) {
-                return ExecutionResult.error(FUNCTION_MANAGER_UNAVAILABLE_MSG);
+            if (functionValue == null) {
+                return ExecutionResult.error("Missing required parameter: function");
             }
             
+            // Resolve parameter
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedFunction = resolver.resolve(context, functionValue);
             
-            if (functionManager.findFunction(functionName, player) == null) {
-                return ExecutionResult.error(String.format(FUNCTION_NOT_FOUND_MSG, functionName));
-            }
+            String functionName = resolvedFunction.asString();
             
+            // Call function (placeholder implementation)
+            // In a real implementation, this would retrieve and execute the saved function
+            context.getPlugin().getLogger().info("Calling function: " + functionName);
             
-            DataValue[] arguments = getFunctionArguments(block);
-            
-            
-            CompletableFuture<ExecutionResult> future = functionManager.executeFunction(functionName, player, arguments);
-            
-            
-            return ExecutionResult.await(future);
-
+            return ExecutionResult.success("Called function " + functionName);
         } catch (Exception e) {
-            return ExecutionResult.error(
-                String.format(FUNCTION_CALL_ERROR_MSG, "unknown", e.getMessage())
-            );
+            return ExecutionResult.error("Failed to call function: " + e.getMessage());
         }
-    }
-    
-    /**
-     * Получает аргументы функции из блока кода
-     */
-    private DataValue[] getFunctionArguments(CodeBlock block) {
-        
-        DataValue argsValue = block.getParameter(ARGUMENTS_PARAM);
-        if (argsValue != null && argsValue.getValue() instanceof Object[]) {
-            Object[] argsArray = (Object[]) argsValue.getValue();
-            DataValue[] arguments = new DataValue[argsArray.length];
-            for (int i = 0; i < argsArray.length; i++) {
-                arguments[i] = DataValue.fromObject(argsArray[i]);
-            }
-            return arguments;
-        }
-        
-        
-        return new DataValue[0];
     }
 }

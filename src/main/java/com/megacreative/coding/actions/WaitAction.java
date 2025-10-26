@@ -3,35 +3,45 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 
 /**
- * Action for waiting for a specified amount of time.
- * This action pauses execution for the specified duration.
+ * Action to wait for a specified amount of time
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "wait", displayName = "§aWait", type = BlockType.ACTION)
+@BlockMeta(id = "wait", displayName = "§bWait", type = BlockType.ACTION)
 public class WaitAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
+            // Get parameter
+            DataValue delayValue = block.getParameter("delay");
             
-            DataValue durationValue = block.getParameter("duration");
-            
-            if (durationValue == null || durationValue.isEmpty()) {
-                return ExecutionResult.error("Duration is not configured");
+            if (delayValue == null) {
+                return ExecutionResult.error("Missing required parameter: delay");
             }
             
-            long duration = Long.parseLong(durationValue.asString());
+            // Resolve parameter
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedDelay = resolver.resolve(context, delayValue);
             
+            int delay = resolvedDelay.asNumber().intValue();
             
-            long ticks = Math.max(1, duration / 50);
+            // Wait (this is a simple implementation - in a real system you might want to handle this differently)
+            try {
+                Thread.sleep(delay * 50L); // Convert ticks to milliseconds (1 tick = 50ms)
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return ExecutionResult.error("Wait interrupted");
+            }
             
-            
-            return ExecutionResult.pause(ticks);
+            return ExecutionResult.success("Waited for " + delay + " ticks");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to wait: " + e.getMessage());
         }

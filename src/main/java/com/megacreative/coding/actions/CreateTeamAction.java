@@ -13,63 +13,66 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 /**
- * Action for creating a team.
- * This action retrieves parameters from the new parameter system.
+ * Action to create a team on a scoreboard
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "createTeam", displayName = "§aCreate Team", type = BlockType.ACTION)
+@BlockMeta(id = "createTeam", displayName = "§bCreate Team", type = BlockType.ACTION)
 public class CreateTeamAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
+            // Get parameters
             DataValue teamNameValue = block.getParameter("teamName");
             DataValue displayNameValue = block.getParameter("displayName");
             DataValue prefixValue = block.getParameter("prefix");
             DataValue suffixValue = block.getParameter("suffix");
             
-            if (teamNameValue == null || teamNameValue.isEmpty()) {
-                return ExecutionResult.error("No team name provided");
+            if (teamNameValue == null) {
+                return ExecutionResult.error("Missing required parameter: teamName");
             }
-
             
+            // Resolve parameters
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTeamName = resolver.resolve(context, teamNameValue);
-            DataValue resolvedDisplayName = resolver.resolve(context, displayNameValue);
-            DataValue resolvedPrefix = resolver.resolve(context, prefixValue);
-            DataValue resolvedSuffix = resolver.resolve(context, suffixValue);
-            
             
             String teamName = resolvedTeamName.asString();
-            String displayName = resolvedDisplayName.asString();
-            String prefix = resolvedPrefix.asString();
-            String suffix = resolvedSuffix.asString();
             
-            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-            
+            // Get player's scoreboard
             Scoreboard scoreboard = player.getScoreboard();
-            Team team = scoreboard.registerNewTeam(teamName);
-            
-            
-            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
-            if (!displayName.isEmpty()) {
-                team.setDisplayName(displayName);
+            if (scoreboard == null) {
+                return ExecutionResult.error("Player has no scoreboard");
             }
             
-            if (!prefix.isEmpty()) {
-                team.setPrefix(prefix);
+            // Create or get team
+            Team team = scoreboard.getTeam(teamName);
+            if (team == null) {
+                team = scoreboard.registerNewTeam(teamName);
             }
             
-            if (!suffix.isEmpty()) {
-                team.setSuffix(suffix);
+            // Set team properties
+            if (displayNameValue != null) {
+                DataValue resolvedDisplayName = resolver.resolve(context, displayNameValue);
+                team.setDisplayName(resolvedDisplayName.asString());
             }
-
-            return ExecutionResult.success("Team created successfully");
+            
+            if (prefixValue != null) {
+                DataValue resolvedPrefix = resolver.resolve(context, prefixValue);
+                team.setPrefix(resolvedPrefix.asString());
+            }
+            
+            if (suffixValue != null) {
+                DataValue resolvedSuffix = resolver.resolve(context, suffixValue);
+                team.setSuffix(resolvedSuffix.asString());
+            }
+            
+            return ExecutionResult.success("Created team " + teamName);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to create team: " + e.getMessage());
         }

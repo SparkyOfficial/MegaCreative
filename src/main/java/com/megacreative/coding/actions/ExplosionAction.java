@@ -3,6 +3,7 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
@@ -11,50 +12,53 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
- * Action for creating an explosion.
- * This action creates an explosion at the player's location using the new parameter system.
+ * Action to create an explosion
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "explosion", displayName = "§aCreate Explosion", type = BlockType.ACTION)
+@BlockMeta(id = "explosion", displayName = "§bCreate Explosion", type = BlockType.ACTION)
 public class ExplosionAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
+            // Get parameters
             DataValue powerValue = block.getParameter("power");
-            DataValue fireValue = block.getParameter("fire");
-            DataValue breakBlocksValue = block.getParameter("breakBlocks");
-
+            DataValue xValue = block.getParameter("x");
+            DataValue yValue = block.getParameter("y");
+            DataValue zValue = block.getParameter("z");
             
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            
+            // Get power (default to 4.0)
             float power = 4.0f;
-            if (powerValue != null && !powerValue.isEmpty()) {
-                try {
-                    power = Math.max(0, Float.parseFloat(powerValue.asString()));
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    // Use default power when parsing fails
-                }
+            if (powerValue != null) {
+                DataValue resolvedPower = resolver.resolve(context, powerValue);
+                power = Math.max(0.0f, resolvedPower.asNumber().floatValue());
             }
-
-            boolean fire = false;
-            if (fireValue != null && !fireValue.isEmpty()) {
-                fire = Boolean.parseBoolean(fireValue.asString());
-            }
-
-            boolean breakBlocks = true;
-            if (breakBlocksValue != null && !breakBlocksValue.isEmpty()) {
-                breakBlocks = Boolean.parseBoolean(breakBlocksValue.asString());
-            }
-
             
+            // Get location (default to player's location)
             Location location = player.getLocation();
-            boolean success = player.getWorld().createExplosion(location, power, fire, breakBlocks);
+            if (xValue != null && yValue != null && zValue != null) {
+                DataValue resolvedX = resolver.resolve(context, xValue);
+                DataValue resolvedY = resolver.resolve(context, yValue);
+                DataValue resolvedZ = resolver.resolve(context, zValue);
+                
+                double x = resolvedX.asNumber().doubleValue();
+                double y = resolvedY.asNumber().doubleValue();
+                double z = resolvedZ.asNumber().doubleValue();
+                
+                location = new Location(player.getWorld(), x, y, z);
+            }
+            
+            // Create explosion
+            boolean success = player.getWorld().createExplosion(location, power);
             
             if (success) {
                 return ExecutionResult.success("Created explosion with power " + power);

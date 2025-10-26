@@ -3,6 +3,9 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Location;
@@ -10,76 +13,79 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 /**
- * Action for spawning an entity.
- * This action spawns an entity of a specified type using the new parameter system.
+ * Action to spawn an entity
+ * 
+ * @author Андрій Будильников
  */
+@BlockMeta(id = "spawnEntity", displayName = "§bSpawn Entity", type = BlockType.ACTION)
 public class SpawnEntityAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
-            DataValue entityTypeValue = block.getParameter("entityType");
+            // Get parameters
+            DataValue entityValue = block.getParameter("entity");
             DataValue countValue = block.getParameter("count");
             DataValue radiusValue = block.getParameter("radius");
             
-            if (entityTypeValue == null || entityTypeValue.isEmpty()) {
-                return ExecutionResult.error("No entity type provided");
+            if (entityValue == null) {
+                return ExecutionResult.error("Missing required parameter: entity");
             }
-
             
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedEntity = resolver.resolve(context, entityValue);
+            
+            String entityStr = resolvedEntity.asString();
             EntityType entityType;
+            
             try {
-                entityType = EntityType.valueOf(entityTypeValue.asString().toUpperCase());
+                entityType = EntityType.valueOf(entityStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                return ExecutionResult.error("Invalid entity type: " + entityTypeValue.asString());
+                return ExecutionResult.error("Invalid entity type: " + entityStr);
             }
-
+            
+            // Get count (default to 1)
             int count = 1;
-            if (countValue != null && !countValue.isEmpty()) {
-                try {
-                    count = Math.max(1, Integer.parseInt(countValue.asString()));
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    context.getPlugin().getLogger().warning("Invalid count value: " + countValue.asString());
-                }
+            if (countValue != null) {
+                DataValue resolvedCount = resolver.resolve(context, countValue);
+                count = Math.max(1, resolvedCount.asNumber().intValue());
             }
-
-            double radius = 3.0;
-            if (radiusValue != null && !radiusValue.isEmpty()) {
-                try {
-                    radius = Math.max(0, Double.parseDouble(radiusValue.asString()));
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    context.getPlugin().getLogger().warning("Invalid radius value: " + radiusValue.asString());
-                }
+            
+            // Get radius (default to 0 - spawn at player location)
+            double radius = 0.0;
+            if (radiusValue != null) {
+                DataValue resolvedRadius = resolver.resolve(context, radiusValue);
+                radius = Math.max(0.0, resolvedRadius.asNumber().doubleValue());
             }
-
             
-            Location spawnLocation = player.getLocation();
+            // Spawn entities
+            Location baseLocation = player.getLocation();
+            int spawned = 0;
             
-            int spawnedCount = 0;
             for (int i = 0; i < count; i++) {
+                Location spawnLocation = baseLocation.clone();
                 
-                double offsetX = (Math.random() - 0.5) * 2 * radius;
-                double offsetZ = (Math.random() - 0.5) * 2 * radius;
-                Location entityLocation = spawnLocation.clone().add(offsetX, 0, offsetZ);
+                // Add random offset if radius > 0
+                if (radius > 0) {
+                    double offsetX = (Math.random() * 2 - 1) * radius;
+                    double offsetY = (Math.random() * 2 - 1) * radius;
+                    double offsetZ = (Math.random() * 2 - 1) * radius;
+                    spawnLocation.add(offsetX, offsetY, offsetZ);
+                }
                 
-                
-                entityLocation.setY(spawnLocation.getWorld().getHighestBlockYAt(entityLocation));
-                
-                spawnLocation.getWorld().spawnEntity(entityLocation, entityType);
-                spawnedCount++;
+                // Spawn entity
+                if (player.getWorld().spawnEntity(spawnLocation, entityType) != null) {
+                    spawned++;
+                }
             }
             
-            return ExecutionResult.success("Spawned " + spawnedCount + " " + entityType.name() + "(s)");
+            return ExecutionResult.success("Spawned " + spawned + " " + entityType.name() + "(s)");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to spawn entity: " + e.getMessage());
         }

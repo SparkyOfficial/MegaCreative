@@ -3,41 +3,47 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 
 /**
- * Action for getting a variable value.
- * This action retrieves variable name parameter and gets the variable value.
+ * Action to get a variable and store it in another variable
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "getVar", displayName = "§aGet Variable", type = BlockType.ACTION)
+@BlockMeta(id = "getVar", displayName = "§bGet Variable", type = BlockType.ACTION)
 public class GetVarAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         try {
+            // Get parameters
+            DataValue sourceValue = block.getParameter("source");
+            DataValue targetValue = block.getParameter("target");
             
-            DataValue nameValue = block.getParameter("name");
-            
-            if (nameValue == null || nameValue.isEmpty()) {
-                return ExecutionResult.error("Variable name is not configured");
+            if (sourceValue == null || targetValue == null) {
+                return ExecutionResult.error("Missing required parameters: source, target");
             }
             
-            String varName = nameValue.asString();
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedSource = resolver.resolve(context, sourceValue);
+            DataValue resolvedTarget = resolver.resolve(context, targetValue);
             
+            String source = resolvedSource.asString();
+            String target = resolvedTarget.asString();
             
-            DataValue varValue = context.getVariableAsDataValue(varName);
+            // Get variable value
+            DataValue value = context.getVariableAsDataValue(source);
+            String valueStr = value != null ? value.asString() : "";
             
-            if (varValue == null) {
-                return ExecutionResult.error("Variable not found: " + varName);
-            }
+            // Set target variable
+            context.setVariable(target, valueStr);
             
-            
-            block.setParameter("result", varValue);
-            
-            return ExecutionResult.success("Variable retrieved successfully");
+            return ExecutionResult.success("Got variable " + source + " and stored in " + target);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to get variable: " + e.getMessage());
         }

@@ -4,50 +4,52 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
 /**
- * Action for executing a server command.
- * This action retrieves a command and executes it on the server.
+ * Action to execute a command
  * 
- * Действие для выполнения серверной команды.
- * Это действие получает команду и выполняет ее на сервере.
- * 
- * @author Андрій Budильников
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "command", displayName = "§aExecute Command", type = BlockType.ACTION)
+@BlockMeta(id = "command", displayName = "§bExecute Command", type = BlockType.ACTION)
 public class CommandAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return ExecutionResult.error("No player in execution context");
+        }
+        
         try {
-            
+            // Get parameter
             DataValue commandValue = block.getParameter("command");
             
-            if (commandValue == null || commandValue.isEmpty()) {
-                return ExecutionResult.error("No command provided");
+            if (commandValue == null) {
+                return ExecutionResult.error("Missing required parameter: command");
             }
             
-            
+            // Resolve parameter
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
             
-            String command = resolvedCommand.asString();
+            String commandStr = resolvedCommand.asString();
             
-            
-            boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            // Execute command
+            boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandStr);
             
             if (success) {
-                return ExecutionResult.success("Command executed successfully");
+                return ExecutionResult.success("Executed command: " + commandStr);
             } else {
-                return ExecutionResult.error("Failed to execute command: " + command);
+                return ExecutionResult.error("Failed to execute command: " + commandStr);
             }
         } catch (Exception e) {
-            return ExecutionResult.error("Error executing command: " + e.getMessage());
+            return ExecutionResult.error("Failed to execute command: " + e.getMessage());
         }
     }
 }

@@ -11,7 +11,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 /**
- * Condition for checking if a player is riding a specific entity from the new parameter system.
+ * Condition for checking if a player is riding a specific entity.
  * This condition returns true if the player is riding the specified entity type.
  */
 @BlockMeta(id = "isRiding", displayName = "§aIs Riding", type = BlockType.CONDITION)
@@ -28,49 +28,37 @@ public class IsRidingCondition implements BlockCondition {
             
             DataValue entityValue = block.getParameter("entity");
             
-            
-            if (entityValue != null && !entityValue.isEmpty()) {
-                
-                ParameterResolver resolver = new ParameterResolver(context);
-                DataValue resolvedEntity = resolver.resolve(context, entityValue);
-                
-                
-                String entityName = resolvedEntity.asString();
-                // Fix for Qodana issue: Condition entityName == null is always false
-                // This was a false positive - we need to properly check for empty strings
-                if (entityName.isEmpty()) {
-                    context.getPlugin().getLogger().warning("IsRidingCondition: 'entity' parameter is empty.");
-                    return false;
-                }
-                
-                try {
-                    EntityType entityType = EntityType.valueOf(entityName.toUpperCase());
-                    if (player.isInsideVehicle()) {
-                        org.bukkit.entity.Entity vehicle = player.getVehicle();
-                        if (vehicle != null) {
-                            return vehicle.getType() == entityType;
-                        }
-                    }
-                    return false;
-                } catch (IllegalArgumentException e) {
-                    context.getPlugin().getLogger().warning("IsRidingCondition: Invalid entity type '" + entityName + "'.");
-                    return false;
-                }
-            } else {
-                
+            // If no entity is specified, just check if player is riding anything
+            if (entityValue == null || entityValue.isEmpty()) {
                 return player.isInsideVehicle();
             }
-        } catch (Exception e) {
+
             
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedEntity = resolver.resolve(context, entityValue);
+            
+            String entityName = resolvedEntity.asString();
+            
+            if (entityName.isEmpty()) {
+                return player.isInsideVehicle();
+            }
+
+            
+            if (!player.isInsideVehicle()) {
+                return false;
+            }
+
+            
+            try {
+                EntityType entityType = EntityType.valueOf(entityName.toUpperCase());
+                return player.getVehicle().getType() == entityType;
+            } catch (IllegalArgumentException e) {
+                context.getPlugin().getLogger().warning("IsRidingCondition: Invalid entity type '" + entityName + "'.");
+                return false;
+            }
+        } catch (Exception e) {
             context.getPlugin().getLogger().warning("Error in IsRidingCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Helper class to hold entity parameters
-     */
-    private static class IsRidingParams {
-        String entityStr = "";
     }
 }

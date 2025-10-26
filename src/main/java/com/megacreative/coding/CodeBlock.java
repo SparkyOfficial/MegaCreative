@@ -1,6 +1,7 @@
 package com.megacreative.coding;
 
 import com.megacreative.coding.values.DataValue;
+import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import java.util.*;
 
@@ -253,6 +254,19 @@ public class CodeBlock {
      */
     public int getLocationZ() {
         return z;
+    }
+    
+    /**
+     * Gets the location of this block as a Bukkit Location object
+     * @return Location object or null if world is not found
+     */
+    public Location getLocation() {
+        if (worldId == null) return null;
+        
+        org.bukkit.World world = org.bukkit.Bukkit.getWorld(worldId);
+        if (world == null) return null;
+        
+        return new Location(world, x, y, z);
     }
     
     /**

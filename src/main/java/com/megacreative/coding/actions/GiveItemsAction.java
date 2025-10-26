@@ -3,117 +3,75 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.ListValue;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
 /**
- * Action for giving multiple items to a player.
- * This action gives a list of items to the player based on parameters.
+ * Action to give multiple items to a player
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "giveItems", displayName = "§aGive Items", type = BlockType.ACTION)
+@BlockMeta(id = "giveItems", displayName = "§bGive Items", type = BlockType.ACTION)
 public class GiveItemsAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get all parameters
+            Map<String, DataValue> parameters = block.getParameters();
             
-            DataValue itemsValue = block.getParameter("items");
-            
-            if (itemsValue == null || itemsValue.isEmpty()) {
-                return ExecutionResult.error("No items configured for giving");
+            if (parameters.isEmpty()) {
+                return ExecutionResult.error("No items specified");
             }
-
-            List<ItemStack> itemsToGive = new ArrayList<>();
             
+            int totalItems = 0;
             
-            if (itemsValue instanceof ListValue) {
+            // Process each parameter as an item
+            for (Map.Entry<String, DataValue> entry : parameters.entrySet()) {
+                String key = entry.getKey();
+                DataValue value = entry.getValue();
                 
-                ListValue listValue = (ListValue) itemsValue;
-                List<DataValue> itemList = listValue.getValues();
-                for (DataValue itemValue : itemList) {
-                    ItemStack item = parseItem(itemValue);
-                    if (item != null) {
-                        itemsToGive.add(item);
+                // Skip non-item parameters
+                if (key.equals("action") || key.equals("type")) {
+                    continue;
+                }
+                
+                try {
+                    String[] parts = value.asString().split(":");
+                    String materialStr = parts[0];
+                    int amount = 1;
+                    
+                    if (parts.length > 1) {
+                        amount = Integer.parseInt(parts[1]);
                     }
-                }
-            } else {
-                
-                ItemStack item = parseItem(itemsValue);
-                if (item != null) {
-                    itemsToGive.add(item);
-                }
-            }
-
-            if (itemsToGive.isEmpty()) {
-                return ExecutionResult.error("No valid items to give");
-            }
-
-            int itemCount = 0;
-            
-            
-            for (ItemStack item : itemsToGive) {
-                if (item != null && item.getType().isItem()) {
-                    player.getInventory().addItem(item.clone());
-                    itemCount++;
+                    
+                    Material material = Material.matchMaterial(materialStr);
+                    if (material != null) {
+                        ItemStack itemStack = new ItemStack(material, amount);
+                        player.getInventory().addItem(itemStack);
+                        totalItems += amount;
+                    }
+                } catch (Exception e) {
+                    // Skip invalid items
+                    context.getPlugin().getLogger().warning("Invalid item specification: " + value.asString());
                 }
             }
             
-            return ExecutionResult.success("Gave " + itemCount + " items to player");
+            return ExecutionResult.success("Gave " + totalItems + " items to player");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to give items: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Parses an item from a DataValue
-     */
-    private ItemStack parseItem(DataValue itemValue) {
-        try {
-            if (itemValue == null || itemValue.isEmpty()) {
-                return null;
-            }
-            
-            String itemStr = itemValue.asString();
-            // Fix for Qodana issue: Condition itemStr == null is always false
-            // This was a false positive - we need to properly check for empty strings
-            if (itemStr.isEmpty()) {
-                return null;
-            }
-            
-            
-            String[] parts = itemStr.split(":");
-            Material material = Material.valueOf(parts[0].toUpperCase());
-            
-            int amount = 1;
-            if (parts.length > 1) {
-                try {
-                    amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); 
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    // Use default amount when parsing fails
-                }
-            }
-            
-            return new ItemStack(material, amount);
-        } catch (Exception e) {
-            return null;
         }
     }
 }

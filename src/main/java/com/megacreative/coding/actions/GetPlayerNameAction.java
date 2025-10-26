@@ -4,61 +4,48 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.variables.VariableManager;
 import org.bukkit.entity.Player;
 
 /**
- * Action for getting a player's name.
- * This action retrieves parameters from the new parameter system and gets the player's name.
+ * Action to get a player's name and store it in a variable
+ * 
+ * @author Андрій Будильников
  */
+@BlockMeta(id = "getPlayerName", displayName = "§bGet Player Name", type = BlockType.ACTION)
 public class GetPlayerNameAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get parameter
+            DataValue variableValue = block.getParameter("variable");
             
-            DataValue targetValue = block.getParameter("target");
-            
-            if (targetValue == null || targetValue.isEmpty()) {
-                return ExecutionResult.error("No target variable provided");
+            if (variableValue == null) {
+                return ExecutionResult.error("Missing required parameter: variable");
             }
-
             
+            // Resolve parameter
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue resolvedTarget = resolver.resolve(context, targetValue);
+            DataValue resolvedVariable = resolver.resolve(context, variableValue);
             
+            String variableName = resolvedVariable.asString();
             
-            String targetVar = resolvedTarget.asString();
-            
-            // Fix for Qodana issue: Condition targetVar == null is always false
-            // This was a false positive - we need to properly check for empty strings
-            if (targetVar.isEmpty()) {
-                return ExecutionResult.error("Invalid target variable");
-            }
-
-            
+            // Get player name
             String playerName = player.getName();
-
             
-            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
-            if (variableManager == null) {
-                return ExecutionResult.error("Variable manager not available");
-            }
+            // Store in variable
+            context.setVariable(variableName, playerName);
             
-            
-            DataValue dataValue = DataValue.of(playerName);
-            variableManager.setPlayerVariable(player.getUniqueId(), targetVar, dataValue);
-            
-            context.getPlugin().getLogger().fine("💾 Player name stored: " + playerName + " -> " + targetVar + " for player " + player.getName());
-            
-            return ExecutionResult.success("Player name '" + playerName + "' stored in variable '" + targetVar + "'");
+            return ExecutionResult.success("Stored player name '" + playerName + "' in variable '" + variableName + "'");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to get player name: " + e.getMessage());
         }

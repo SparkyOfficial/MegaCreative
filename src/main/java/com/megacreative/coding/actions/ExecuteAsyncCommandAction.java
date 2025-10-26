@@ -9,45 +9,43 @@ import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 /**
- * Action for executing a command asynchronously.
- * This action retrieves a command from the new parameter system and executes it asynchronously.
+ * Action to execute a command asynchronously
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "executeAsyncCommand", displayName = "§aExecute Async Command", type = BlockType.ACTION)
+@BlockMeta(id = "executeAsyncCommand", displayName = "§bExecute Async Command", type = BlockType.ACTION)
 public class ExecuteAsyncCommandAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return ExecutionResult.error("No player available to execute command");
-        }
-
         try {
-            
+            // Get parameter
             DataValue commandValue = block.getParameter("command");
-            if (commandValue == null || commandValue.isEmpty()) {
-                return ExecutionResult.error("No command provided");
-            }
-
             
+            if (commandValue == null) {
+                return ExecutionResult.error("Missing required parameter: command");
+            }
+            
+            // Resolve parameter
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedCommand = resolver.resolve(context, commandValue);
-
             
-            Bukkit.getScheduler().runTask(context.getPlugin(), () -> {
+            String commandStr = resolvedCommand.asString();
+            
+            // Execute command asynchronously
+            Bukkit.getScheduler().runTaskAsynchronously(context.getPlugin(), () -> {
                 try {
-                    Bukkit.dispatchCommand(player, resolvedCommand.asString());
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandStr);
                 } catch (Exception e) {
-                    context.getPlugin().getLogger().warning("Error executing async command: " + e.getMessage());
+                    context.getPlugin().getLogger().warning("Failed to execute async command: " + e.getMessage());
                 }
             });
             
-            return ExecutionResult.success("Async command scheduled for execution");
+            return ExecutionResult.success("Executing command asynchronously: " + commandStr);
         } catch (Exception e) {
-            return ExecutionResult.error("Error scheduling async command: " + e.getMessage());
+            return ExecutionResult.error("Failed to execute async command: " + e.getMessage());
         }
     }
 }

@@ -3,105 +3,79 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
-import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.values.DataValue;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
+import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.Material;
 
 /**
- * Action for setting a player's armor.
- * This action sets the player's armor pieces from the new parameter system.
+ * Action to set armor items for a player
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "setArmor", displayName = "§aSet Armor", type = BlockType.ACTION)
+@BlockMeta(id = "setArmor", displayName = "§bSet Armor", type = BlockType.ACTION)
 public class SetArmorAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
+            // Get parameters
             DataValue helmetValue = block.getParameter("helmet");
             DataValue chestplateValue = block.getParameter("chestplate");
             DataValue leggingsValue = block.getParameter("leggings");
             DataValue bootsValue = block.getParameter("boots");
             
+            // Resolve parameters and set armor
+            ParameterResolver resolver = new ParameterResolver(context);
             
-            if (helmetValue != null && !helmetValue.isEmpty()) {
-                ItemStack helmet = parseItem(helmetValue);
-                if (helmet != null) {
-                    player.getInventory().setHelmet(helmet);
+            if (helmetValue != null) {
+                DataValue resolvedHelmet = resolver.resolve(context, helmetValue);
+                String helmetStr = resolvedHelmet.asString();
+                Material helmetMaterial = Material.matchMaterial(helmetStr);
+                if (helmetMaterial != null) {
+                    player.getInventory().setHelmet(new ItemStack(helmetMaterial));
                 }
             }
             
-            if (chestplateValue != null && !chestplateValue.isEmpty()) {
-                ItemStack chestplate = parseItem(chestplateValue);
-                if (chestplate != null) {
-                    player.getInventory().setChestplate(chestplate);
+            if (chestplateValue != null) {
+                DataValue resolvedChestplate = resolver.resolve(context, chestplateValue);
+                String chestplateStr = resolvedChestplate.asString();
+                Material chestplateMaterial = Material.matchMaterial(chestplateStr);
+                if (chestplateMaterial != null) {
+                    player.getInventory().setChestplate(new ItemStack(chestplateMaterial));
                 }
             }
             
-            if (leggingsValue != null && !leggingsValue.isEmpty()) {
-                ItemStack leggings = parseItem(leggingsValue);
-                if (leggings != null) {
-                    player.getInventory().setLeggings(leggings);
+            if (leggingsValue != null) {
+                DataValue resolvedLeggings = resolver.resolve(context, leggingsValue);
+                String leggingsStr = resolvedLeggings.asString();
+                Material leggingsMaterial = Material.matchMaterial(leggingsStr);
+                if (leggingsMaterial != null) {
+                    player.getInventory().setLeggings(new ItemStack(leggingsMaterial));
                 }
             }
             
-            if (bootsValue != null && !bootsValue.isEmpty()) {
-                ItemStack boots = parseItem(bootsValue);
-                if (boots != null) {
-                    player.getInventory().setBoots(boots);
+            if (bootsValue != null) {
+                DataValue resolvedBoots = resolver.resolve(context, bootsValue);
+                String bootsStr = resolvedBoots.asString();
+                Material bootsMaterial = Material.matchMaterial(bootsStr);
+                if (bootsMaterial != null) {
+                    player.getInventory().setBoots(new ItemStack(bootsMaterial));
                 }
             }
             
-            return ExecutionResult.success("Set player's armor");
+            return ExecutionResult.success("Set armor items");
         } catch (Exception e) {
             return ExecutionResult.error("Failed to set armor: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Parses an item from a DataValue
-     */
-    private ItemStack parseItem(DataValue itemValue) {
-        try {
-            if (itemValue == null || itemValue.isEmpty()) {
-                return null;
-            }
-            
-            String itemStr = itemValue.asString();
-            // Fix for Qodana issue: Condition itemStr == null is always false
-            // This was a false positive - we need to properly check for empty strings
-            if (itemStr.isEmpty()) {
-                return null;
-            }
-            
-            
-            String[] parts = itemStr.split(":");
-            Material material = Material.valueOf(parts[0].toUpperCase());
-            
-            int amount = 1;
-            if (parts.length > 1) {
-                try {
-                    amount = Integer.parseInt(parts[1]);
-                    amount = Math.max(1, Math.min(64, amount)); 
-                } catch (NumberFormatException e) {
-                    // Log exception and continue processing
-                    // This is expected behavior when parsing user input
-                    // Use default amount when parsing fails
-                }
-            }
-            
-            return new ItemStack(material, amount);
-        } catch (Exception e) {
-            return null;
         }
     }
 }

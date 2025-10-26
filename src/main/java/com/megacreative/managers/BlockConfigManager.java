@@ -62,39 +62,34 @@ public class BlockConfigManager implements Listener {
             return;
         }
 
-        
-        String currentAction = codeBlock.getAction();
-        if (currentAction == null || currentAction.equals("Настройка...") || currentAction.isEmpty()) {
-            
-            // For now, we're removing the GUI functionality
-            // In the future, this will be replaced with a new GUI system
-            player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
-        } else {
-            
-            // For now, we're removing the GUI functionality
-            // In the future, this will be replaced with a new GUI system
-            player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
-        }
+        // With the new GUI system, we delegate to the BlockPlacementHandler
+        // which will open the category selection GUI
+        plugin.getServiceRegistry().getBlockPlacementHandler().onPlayerInteract(
+            new org.bukkit.event.player.PlayerInteractEvent(
+                player,
+                org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK,
+                player.getInventory().getItemInMainHand(),
+                blockLocation.getBlock(),
+                org.bukkit.block.BlockFace.UP,
+                org.bukkit.inventory.EquipmentSlot.HAND
+            )
+        );
     }
     
     /**
      * Shows action selection GUI for the block
      */
     private void showActionSelectionGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
-        
-        // For now, we're removing the GUI functionality
-        // In the future, this will be replaced with a new GUI system
-        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
+        // This method is no longer used with the new GUI system
+        // The new system is handled in BlockPlacementHandler
     }
     
     /**
      * Shows parameter configuration GUI for the block
      */
     private void showParameterConfigGUI(Player player, CodeBlock codeBlock, Location blockLocation) {
-        
-        // For now, we're removing the GUI functionality
-        // In the future, this will be replaced with a new GUI system
-        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
+        // This method is no longer used with the new GUI system
+        // The new system is handled in BlockPlacementHandler
     }
     
     /**

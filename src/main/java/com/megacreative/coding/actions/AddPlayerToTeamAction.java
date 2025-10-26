@@ -4,7 +4,6 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
-import com.megacreative.coding.ParameterUtils;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
@@ -14,55 +13,63 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 /**
- * Action for adding a player to a team.
- * This action retrieves parameters from the new parameter system with fallback to container configuration.
+ * Action to add a player to a team
  * 
- * Действие для добавления игрока в команду.
- * Это действие получает параметры из новой системы параметров с резервным вариантом на конфигурацию контейнера.
- * 
- * @author Андрій Budильников
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "addPlayerToTeam", displayName = "§aAdd Player To Team", type = BlockType.ACTION)
+@BlockMeta(id = "addPlayerToTeam", displayName = "§bAdd Player to Team", type = BlockType.ACTION)
 public class AddPlayerToTeamAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get parameters
+            DataValue teamNameValue = block.getParameter("teamName");
+            DataValue targetPlayerValue = block.getParameter("targetPlayer");
             
-            String teamName = ParameterUtils.getStringParameter(block, context, "teamName", "teamName", "");
-            String targetPlayer = ParameterUtils.getStringParameter(block, context, "targetPlayer", "targetPlayer", "");
-            
-            
-            if (targetPlayer == null || targetPlayer.isEmpty()) {
-                targetPlayer = player.getName();
+            if (teamNameValue == null) {
+                return ExecutionResult.error("Missing required parameter: teamName");
             }
-
             
+            // Resolve parameters
             ParameterResolver resolver = new ParameterResolver(context);
-            teamName = resolver.resolveString(context, teamName);
-            targetPlayer = resolver.resolveString(context, targetPlayer);
+            DataValue resolvedTeamName = resolver.resolve(context, teamNameValue);
             
-            if (teamName == null || teamName.isEmpty()) {
-                return ExecutionResult.error("Invalid team name");
+            String teamName = resolvedTeamName.asString();
+            
+            // Get target player (default to current player)
+            Player targetPlayer = player;
+            if (targetPlayerValue != null) {
+                DataValue resolvedTargetPlayer = resolver.resolve(context, targetPlayerValue);
+                String targetPlayerName = resolvedTargetPlayer.asString();
+                targetPlayer = context.getPlugin().getServer().getPlayer(targetPlayerName);
+                
+                if (targetPlayer == null) {
+                    return ExecutionResult.error("Player not found: " + targetPlayerName);
+                }
             }
-
             
+            // Get player's scoreboard
             Scoreboard scoreboard = player.getScoreboard();
-            Team team = scoreboard.getTeam(teamName);
+            if (scoreboard == null) {
+                return ExecutionResult.error("Player has no scoreboard");
+            }
             
+            // Get team
+            Team team = scoreboard.getTeam(teamName);
             if (team == null) {
                 return ExecutionResult.error("Team not found: " + teamName);
             }
             
+            // Add player to team
+            team.addEntry(targetPlayer.getName());
             
-            team.addEntry(targetPlayer);
-
-            return ExecutionResult.success("Player added to team successfully");
+            return ExecutionResult.success("Added player " + targetPlayer.getName() + " to team " + teamName);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to add player to team: " + e.getMessage());
         }

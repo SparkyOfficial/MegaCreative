@@ -7,10 +7,11 @@ import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.values.DataValue;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 /**
- * Condition for checking world time from the new parameter system.
+ * Condition for checking the world time.
  * This condition returns true if the world time matches the specified criteria.
  */
 @BlockMeta(id = "worldTime", displayName = "§aWorld Time", type = BlockType.CONDITION)
@@ -19,84 +20,59 @@ public class WorldTimeCondition implements BlockCondition {
     @Override
     public boolean evaluate(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
-        // player is never null when this method is called according to static analysis
-        
+        if (player == null) {
+            return false;
+        }
 
         try {
             
             DataValue timeValue = block.getParameter("time");
             DataValue operatorValue = block.getParameter("operator");
             
+            if (timeValue == null || timeValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("WorldTimeCondition: 'time' parameter is missing.");
+                return false;
+            }
             
-            long worldTime = 0;
-            if (timeValue != null && !timeValue.isEmpty()) {
-                try {
-                    worldTime = timeValue.asNumber().longValue();
-                } catch (NumberFormatException e) {
-                    context.getPlugin().getLogger().warning("WorldTimeCondition: Invalid time value, using default 0.");
-                    worldTime = 0;
-                }
+            if (operatorValue == null || operatorValue.isEmpty()) {
+                context.getPlugin().getLogger().warning("WorldTimeCondition: 'operator' parameter is missing.");
+                return false;
             }
 
             
             ParameterResolver resolver = new ParameterResolver(context);
-            DataValue resolvedTime = resolver.resolve(context, DataValue.of(String.valueOf(worldTime)));
+            DataValue resolvedTime = resolver.resolve(context, timeValue);
+            DataValue resolvedOperator = resolver.resolve(context, operatorValue);
             
-            long time;
-            try {
-                time = Long.parseLong(resolvedTime.asString());
-            } catch (NumberFormatException e) {
-                context.getPlugin().getLogger().warning("WorldTimeCondition: Invalid resolved time value, using default 0.");
-                time = 0;
-            }
-
+            long time = resolvedTime.asNumber().longValue();
+            String operator = resolvedOperator.asString();
             
-            String operator = "equal";
-            if (operatorValue != null && !operatorValue.isEmpty()) {
-                DataValue resolvedOperator = resolver.resolve(context, operatorValue);
-                operator = resolvedOperator.asString();
-            }
-            // operator is already assigned to "equal" if it's null or empty, so this check is redundant
-
+            World world = player.getWorld();
+            long worldTime = world.getTime();
             
-            long currentWorldTime = player.getWorld().getTime();
-
-            
-            switch (operator.toLowerCase()) {
+            switch (operator) {
                 case "equal":
-                case "equals":
                 case "==":
-                    return currentWorldTime == time;
+                    return worldTime == time;
                 case "greater":
-                case "greater_than":
                 case ">":
-                    return currentWorldTime > time;
+                    return worldTime > time;
                 case "less":
-                case "less_than":
                 case "<":
-                    return currentWorldTime < time;
+                    return worldTime < time;
                 case "greater_or_equal":
                 case ">=":
-                    return currentWorldTime >= time;
+                    return worldTime >= time;
                 case "less_or_equal":
                 case "<=":
-                    return currentWorldTime <= time;
+                    return worldTime <= time;
                 default:
-                    context.getPlugin().getLogger().warning("WorldTimeCondition: Unknown operator '" + operator + "', using 'equal'.");
-                    return currentWorldTime == time;
+                    context.getPlugin().getLogger().warning("WorldTimeCondition: Invalid operator '" + operator + "'.");
+                    return false;
             }
         } catch (Exception e) {
-            
             context.getPlugin().getLogger().warning("Error in WorldTimeCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Helper class to hold time parameters
-     */
-    private static class WorldTimeParams {
-        String timeStr = "";
-        String operatorStr = "";
     }
 }

@@ -12,6 +12,7 @@ import com.megacreative.events.CodeBlockPlacedEvent;
 import com.megacreative.events.CodeBlockBrokenEvent;
 import com.megacreative.events.MegaBlockPlaceEvent;
 import com.megacreative.coding.values.DataValue;
+import com.megacreative.gui.coding.CodingGUIListener;
 import com.megacreative.interfaces.IWorldManager;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -48,9 +49,11 @@ public class BlockPlacementHandler implements Listener {
     private BlockConfigService blockConfigService;
     private PlayerModeManager playerModeManager;
     private IWorldManager worldManager;
+    private CodingGUIListener codingGUIListener;
     
     public BlockPlacementHandler(MegaCreative plugin) {
         this.plugin = plugin;
+        this.codingGUIListener = new CodingGUIListener(plugin);
         
     }
     
@@ -388,7 +391,7 @@ public class BlockPlacementHandler implements Listener {
     
     /**
      * Обрабатывает клик правой кнопкой мыши. 
-     * Теперь полностью делегирует открытие GUI реестру GUIRegistry.
+     * Теперь открывает новую систему GUI для выбора действий.
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(PlayerInteractEvent event) {
@@ -419,9 +422,12 @@ public class BlockPlacementHandler implements Listener {
             return;
         }
         
-        // For now, we're removing the GUI functionality
-        // In the future, this will be replaced with a new GUI system
-        player.sendMessage("§cGUI functionality has been temporarily disabled for rework.");
+        // Open the new GUI system
+        if (codingGUIListener != null) {
+            codingGUIListener.openCategorySelectionGUI(player, codeBlock);
+        } else {
+            player.sendMessage("§cОшибка: система GUI не инициализирована.");
+        }
     }
     
     /**

@@ -8,17 +8,23 @@ import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 
 /**
- * Действие для выполнения альтернативной ветки в условных конструкциях.
- * Используется в паре с условными блоками для реализации логики "иначе".
+ * Action to execute an alternative block when a condition is false
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "else", displayName = "§aElse", type = BlockType.ACTION)
+@BlockMeta(id = "else", displayName = "§bElse", type = BlockType.ACTION)
 public class ElseAction implements BlockAction {
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        
-        
-        context.getPlugin().getLogger().fine("Else block executed");
-        return ExecutionResult.success("Else block executed");
+        try {
+            // This is a control flow action that would be handled by the script engine
+            // For now, we'll just log that we're executing the else block
+            context.getPlugin().getLogger().info("Executing else block");
+            
+            return ExecutionResult.success("Executed else block");
+        } catch (Exception e) {
+            return ExecutionResult.error("Failed to execute else block: " + e.getMessage());
+        }
     }
 }

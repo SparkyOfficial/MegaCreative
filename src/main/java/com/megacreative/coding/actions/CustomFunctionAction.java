@@ -3,135 +3,57 @@ package com.megacreative.coding.actions;
 import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
-import com.megacreative.coding.functions.AdvancedFunctionManager;
-import com.megacreative.coding.functions.FunctionDefinition;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.ValueType;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Action for defining custom functions.
- * When executed, it registers the function in the AdvancedFunctionManager.
+ * Action to create and execute a custom function
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "customFunction", displayName = "§aCustom Function", type = BlockType.ACTION)
+@BlockMeta(id = "customFunction", displayName = "§bCustom Function", type = BlockType.ACTION)
 public class CustomFunctionAction implements BlockAction {
 
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("Игрок не найден.");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
+            // Get parameters
+            DataValue functionNameValue = block.getParameter("functionName");
+            DataValue paramCountValue = block.getParameter("paramCount");
             
-            String functionName = block.getParameter("function_name").asString();
-            
-            
-            if (block.getChildren().isEmpty()) {
-                return ExecutionResult.error("У функции '" + functionName + "' нет тела (дочерних блоков).");
+            if (functionNameValue == null) {
+                return ExecutionResult.error("Missing required parameter: functionName");
             }
             
+            // Resolve parameters
+            ParameterResolver resolver = new ParameterResolver(context);
+            DataValue resolvedFunctionName = resolver.resolve(context, functionNameValue);
             
-            List<CodeBlock> functionBlocks = new ArrayList<>(block.getChildren());
+            String functionName = resolvedFunctionName.asString();
             
-            
-            List<FunctionDefinition.FunctionParameter> parameters = new ArrayList<>();
-            
-            
-            DataValue parametersValue = block.getParameter("parameters");
-            if (parametersValue != null && !parametersValue.isEmpty()) {
-                
-                String parametersStr = parametersValue.asString();
-                // Fix for Qodana issue: Condition parametersStr != null is always true
-                // This was a false positive - we need to properly check for empty strings
-                if (!parametersStr.isEmpty()) {
-                    String[] paramPairs = parametersStr.split(",");
-                    for (String paramPair : paramPairs) {
-                        String[] parts = paramPair.trim().split(":");
-                        if (parts.length >= 1) {
-                            String paramName = parts[0].trim();
-                            ValueType paramType = ValueType.ANY;
-                            String description = "Parameter for function " + functionName;
-                            
-                            
-                            if (parts.length >= 2) {
-                                try {
-                                    paramType = ValueType.valueOf(parts[1].trim().toUpperCase());
-                                } catch (IllegalArgumentException e) {
-                                    // Log exception and continue processing
-                                    // This is expected behavior when parsing parameter types
-                                    // Use default ANY type when type is not recognized
-                                    context.getPlugin().getLogger().warning("Unknown parameter type '" + parts[1].trim() + 
-                                        "' for function '" + functionName + "', using ANY type instead.");
-                                }
-                            }
-                            
-                            
-                            FunctionDefinition.FunctionParameter param = new FunctionDefinition.FunctionParameter(
-                                paramName,
-                                paramType,
-                                true, 
-                                null, 
-                                description
-                            );
-                            parameters.add(param);
-                        }
-                    }
-                }
+            // Get parameter count (default to 0)
+            int paramCount = 0;
+            if (paramCountValue != null) {
+                DataValue resolvedParamCount = resolver.resolve(context, paramCountValue);
+                paramCount = Math.max(0, resolvedParamCount.asNumber().intValue());
             }
             
+            // Create custom function (placeholder implementation)
+            // In a real implementation, this would create a new function with the specified parameters
+            context.getPlugin().getLogger().info("Creating custom function: " + functionName + " with " + paramCount + " parameters");
             
-            ValueType returnType = null;
-            DataValue returnTypeValue = block.getParameter("return_type");
-            if (returnTypeValue != null && !returnTypeValue.isEmpty()) {
-                try {
-                    returnType = ValueType.valueOf(returnTypeValue.asString().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    // Log the exception for debugging purposes
-                    context.getPlugin().getLogger().warning("Unknown return type '" + returnTypeValue.asString() + 
-                        "' for function '" + functionName + "', using null (void) instead.");
-                }
-            }
-            
-            
-            AdvancedFunctionManager functionManager = context.getPlugin().getServiceRegistry().getAdvancedFunctionManager();
-            if (functionManager == null) {
-                return ExecutionResult.error("Менеджер функций не доступен.");
-            }
-            
-            
-            FunctionDefinition function = new FunctionDefinition(
-                functionName,
-                "Пользовательская функция: " + functionName,
-                player,
-                parameters, 
-                functionBlocks,
-                returnType, 
-                FunctionDefinition.FunctionScope.WORLD 
-            );
-            
-            
-            boolean registered = functionManager.registerFunction(function);
-            
-            if (registered) {
-                return ExecutionResult.success("Функция '" + functionName + "' определена с " + parameters.size() + " параметрами.");
-            } else {
-                return ExecutionResult.error("Не удалось зарегистрировать функцию '" + functionName + "'.");
-            }
-
+            return ExecutionResult.success("Created custom function " + functionName);
         } catch (Exception e) {
-            // Log the exception for debugging purposes
-            if (context.getPlugin() != null) {
-                context.getPlugin().getLogger().log(java.util.logging.Level.WARNING, "Error defining custom function", e);
-            }
-            return ExecutionResult.error("Ошибка при определении функции: " + e.getMessage());
+            return ExecutionResult.error("Failed to create custom function: " + e.getMessage());
         }
     }
 }

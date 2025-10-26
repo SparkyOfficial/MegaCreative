@@ -11,8 +11,8 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 /**
- * Condition for checking if a player is in a specific game mode from the new parameter system.
- * This condition returns true if the player is in the specified game mode.
+ * Condition for checking a player's game mode.
+ * This condition returns true if the player's game mode matches the specified mode.
  */
 @BlockMeta(id = "playerGameMode", displayName = "§aPlayer Game Mode", type = BlockType.CONDITION)
 public class PlayerGameModeCondition implements BlockCondition {
@@ -28,42 +28,27 @@ public class PlayerGameModeCondition implements BlockCondition {
             
             DataValue modeValue = block.getParameter("mode");
             
-            
             if (modeValue == null || modeValue.isEmpty()) {
                 context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is missing.");
                 return false;
             }
-            
+
             
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedMode = resolver.resolve(context, modeValue);
             
-            String modeName = resolvedMode.asString();
-            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-            if (modeName.isEmpty()) {
-                context.getPlugin().getLogger().warning("PlayerGameModeCondition: 'mode' parameter is empty.");
-                return false;
-            }
-
+            String modeStr = resolvedMode.asString();
             
             try {
-                GameMode gameMode = GameMode.valueOf(modeName.toUpperCase());
-                return player.getGameMode() == gameMode;
+                GameMode expectedMode = GameMode.valueOf(modeStr.toUpperCase());
+                return player.getGameMode() == expectedMode;
             } catch (IllegalArgumentException e) {
-                context.getPlugin().getLogger().warning("PlayerGameModeCondition: Invalid game mode '" + modeName + "'.");
+                context.getPlugin().getLogger().warning("PlayerGameModeCondition: Invalid game mode '" + modeStr + "'.");
                 return false;
             }
         } catch (Exception e) {
-            
             context.getPlugin().getLogger().warning("Error in PlayerGameModeCondition: " + e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Helper class to hold game mode parameters
-     */
-    private static class PlayerGameModeParams {
-        String modeStr = "";
     }
 }

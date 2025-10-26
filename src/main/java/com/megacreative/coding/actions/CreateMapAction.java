@@ -8,60 +8,43 @@ import com.megacreative.coding.annotations.BlockMeta;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
-import com.megacreative.coding.values.types.MapValue;
-import com.megacreative.coding.variables.VariableManager;
-import com.megacreative.coding.variables.IVariableManager.VariableScope;
-import org.bukkit.entity.Player;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Action for creating a map variable.
- * This action creates a new map variable with optional initial values.
+ * Action to create a map variable
  * 
- * Действие для создания переменной карты.
- * Это действие создает новую переменную карты с необязательными начальными значениями.
- * 
- * @author Андрій Budильников
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "createMap", displayName = "§aCreate Map", type = BlockType.ACTION)
+@BlockMeta(id = "createMap", displayName = "§bCreate Map", type = BlockType.ACTION)
 public class CreateMapAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
-        Player player = context.getPlayer();
-        if (player == null) {
-            return ExecutionResult.error("Player not found.");
-        }
-
         try {
+            // Get parameter
+            DataValue mapNameValue = block.getParameter("mapName");
             
-            DataValue mapNameValue = block.getParameter("map_name");
-            
-            if (mapNameValue == null || mapNameValue.isEmpty()) {
-                return ExecutionResult.error("Map name parameter is missing.");
+            if (mapNameValue == null) {
+                return ExecutionResult.error("Missing required parameter: mapName");
             }
             
-            
+            // Resolve parameter
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedMapName = resolver.resolve(context, mapNameValue);
             
             String mapName = resolvedMapName.asString();
             
+            // Create empty map
+            Map<Object, Object> map = new HashMap<>();
             
-            Map<String, DataValue> initialMap = new HashMap<>();
-            MapValue mapValue = new MapValue(initialMap);
+            // Set map variable
+            context.setVariable(mapName, map);
             
-            
-            VariableManager variableManager = context.getPlugin().getServiceRegistry().getVariableManager();
-            if (variableManager != null) {
-                variableManager.setVariable(mapName, mapValue, VariableScope.LOCAL, context.getScriptId());
-            }
-            
-            return ExecutionResult.success("Map '" + mapName + "' created.");
-
+            return ExecutionResult.success("Created map " + mapName);
         } catch (Exception e) {
-            return ExecutionResult.error("Error creating map: " + e.getMessage());
+            return ExecutionResult.error("Failed to create map: " + e.getMessage());
         }
     }
 }

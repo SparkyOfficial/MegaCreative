@@ -10,58 +10,45 @@ import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 /**
- * Action for creating a scoreboard.
- * This action retrieves parameters from the new parameter system.
+ * Action to create a scoreboard for a player
+ * 
+ * @author Андрій Будильников
  */
-@BlockMeta(id = "createScoreboard", displayName = "§aCreate Scoreboard", type = BlockType.ACTION)
+@BlockMeta(id = "createScoreboard", displayName = "§bCreate Scoreboard", type = BlockType.ACTION)
 public class CreateScoreboardAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
+            // Get parameter
             DataValue titleValue = block.getParameter("title");
-            if (titleValue == null || titleValue.isEmpty()) {
-                return ExecutionResult.error("No scoreboard title provided");
-            }
-
             
+            if (titleValue == null) {
+                return ExecutionResult.error("Missing required parameter: title");
+            }
+            
+            // Resolve parameter
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedTitle = resolver.resolve(context, titleValue);
             
-            String scoreboardTitle = resolvedTitle.asString();
+            String title = resolvedTitle.asString();
             
-            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-            if (scoreboardTitle.isEmpty()) {
-                return ExecutionResult.error("Invalid scoreboard title");
-            }
-
+            // Create scoreboard
+            ScoreboardManager manager = context.getPlugin().getServer().getScoreboardManager();
+            Scoreboard scoreboard = manager.getNewScoreboard();
             
-            Scoreboard scoreboard = player.getScoreboard();
-            
-            Objective objective = scoreboard.getObjective("main");
-            if (objective == null) {
-                objective = scoreboard.registerNewObjective("main", "dummy", scoreboardTitle);
-            } else {
-                objective.setDisplayName(scoreboardTitle);
-            }
-            
-            
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            
-            
+            // Set scoreboard for player
             player.setScoreboard(scoreboard);
-
-            return ExecutionResult.success("Scoreboard created successfully");
+            
+            return ExecutionResult.success("Created scoreboard with title: " + title);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to create scoreboard: " + e.getMessage());
         }

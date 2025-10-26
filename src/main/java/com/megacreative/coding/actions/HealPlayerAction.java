@@ -1,55 +1,48 @@
 package com.megacreative.coding.actions;
 
 import com.megacreative.coding.BlockAction;
-import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
+import com.megacreative.coding.ParameterResolver;
 import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
+import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffectType;
-
-import java.util.logging.Logger;
 
 /**
- * Action that heals the player
+ * Action to heal a player
  * 
  * @author Андрій Будильников
  */
-@BlockMeta(id = "healPlayer", displayName = "Heal Player", type = BlockType.ACTION)
+@BlockMeta(id = "healPlayer", displayName = "§bHeal Player", type = BlockType.ACTION)
 public class HealPlayerAction implements BlockAction {
-    
-    private static final Logger LOGGER = Logger.getLogger(HealPlayerAction.class.getName());
     
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
+        Player player = context.getPlayer();
+        if (player == null) {
+            return ExecutionResult.error("No player in execution context");
+        }
+        
         try {
-            Player player = context.getPlayer();
-            if (player == null) {
-                return ExecutionResult.error("No player in execution context");
+            // Get parameter
+            DataValue amountValue = block.getParameter("amount");
+            
+            // Resolve parameter
+            double amount = player.getMaxHealth(); // Default to full heal
+            if (amountValue != null) {
+                ParameterResolver resolver = new ParameterResolver(context);
+                DataValue resolvedAmount = resolver.resolve(context, amountValue);
+                amount = Math.max(0, resolvedAmount.asNumber().doubleValue());
             }
             
-            // Heal the player to full health
-            player.setHealth(player.getMaxHealth());
+            // Heal player
+            double newHealth = Math.min(player.getMaxHealth(), player.getHealth() + amount);
+            player.setHealth(newHealth);
             
-            // Remove negative potion effects
-            player.removePotionEffect(PotionEffectType.POISON);
-            player.removePotionEffect(PotionEffectType.WITHER);
-            player.removePotionEffect(PotionEffectType.BLINDNESS);
-            player.removePotionEffect(PotionEffectType.CONFUSION);
-            player.removePotionEffect(PotionEffectType.HUNGER);
-            player.removePotionEffect(PotionEffectType.SLOW);
-            player.removePotionEffect(PotionEffectType.SLOW_DIGGING);
-            player.removePotionEffect(PotionEffectType.WEAKNESS);
-            player.removePotionEffect(PotionEffectType.UNLUCK);
-            
-            // Send a message to the player
-            player.sendMessage("§aYou have been healed!");
-            
-            LOGGER.fine("Healed player " + player.getName());
-            return ExecutionResult.success("Player healed successfully");
+            return ExecutionResult.success("Healed player by " + amount + " health points");
         } catch (Exception e) {
-            LOGGER.severe("Error executing HealPlayerAction: " + e.getMessage());
             return ExecutionResult.error("Failed to heal player: " + e.getMessage());
         }
     }

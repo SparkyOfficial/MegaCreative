@@ -4,72 +4,71 @@ import com.megacreative.coding.BlockAction;
 import com.megacreative.coding.CodeBlock;
 import com.megacreative.coding.ExecutionContext;
 import com.megacreative.coding.ParameterResolver;
+import com.megacreative.coding.annotations.BlockMeta;
+import com.megacreative.coding.BlockType;
 import com.megacreative.coding.executors.ExecutionResult;
 import com.megacreative.coding.values.DataValue;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 
 /**
- * Action for incrementing a score on a scoreboard.
- * This action retrieves parameters from the new parameter system and increments a score.
+ * Action to increment a score on a scoreboard
+ * 
+ * @author Андрій Будильников
  */
+@BlockMeta(id = "incrementScore", displayName = "§bIncrement Score", type = BlockType.ACTION)
 public class IncrementScoreAction implements BlockAction {
-
+    
     @Override
     public ExecutionResult execute(CodeBlock block, ExecutionContext context) {
         Player player = context.getPlayer();
         if (player == null) {
-            return ExecutionResult.error("No player found in execution context");
+            return ExecutionResult.error("No player in execution context");
         }
-
+        
         try {
-            
+            // Get parameters
             DataValue keyValue = block.getParameter("key");
             DataValue incrementValue = block.getParameter("increment");
             
-            if (keyValue == null || keyValue.isEmpty()) {
-                return ExecutionResult.error("No score key provided");
+            if (keyValue == null) {
+                return ExecutionResult.error("Missing required parameter: key");
             }
-
             
+            // Resolve parameters
             ParameterResolver resolver = new ParameterResolver(context);
             DataValue resolvedKey = resolver.resolve(context, keyValue);
-            DataValue resolvedIncrement = resolver.resolve(context, incrementValue);
-            
             
             String key = resolvedKey.asString();
-            String incrementStr = resolvedIncrement.asString();
             
-            // Removed redundant null checks - static analysis flagged them as always non-null when this method is called
-            if (key.isEmpty()) {
-                return ExecutionResult.error("Invalid score key");
+            // Get increment value (default to 1)
+            int increment = 1;
+            if (incrementValue != null) {
+                DataValue resolvedIncrement = resolver.resolve(context, incrementValue);
+                increment = resolvedIncrement.asNumber().intValue();
             }
-
             
-            int increment = 1; 
-            // Removed redundant null check - static analysis flagged it as always non-null when this method is called
-            if (!incrementStr.isEmpty()) {
-                try {
-                    increment = Integer.parseInt(incrementStr);
-                } catch (NumberFormatException e) {
-                    return ExecutionResult.error("Invalid increment value: " + incrementStr);
-                }
-            }
-
-            
+            // Get player's scoreboard
             Scoreboard scoreboard = player.getScoreboard();
+            if (scoreboard == null) {
+                return ExecutionResult.error("Player has no scoreboard");
+            }
             
+            // Get or create objective
             Objective objective = scoreboard.getObjective("main");
             if (objective == null) {
-                return ExecutionResult.error("No main objective found on scoreboard");
+                objective = scoreboard.registerNewObjective("main", "dummy", "Scoreboard");
+                objective.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
             }
             
+            // Get current score and increment it
             Score score = objective.getScore(key);
-            score.setScore(score.getScore() + increment);
-
-            return ExecutionResult.success("Score incremented successfully");
+            int currentValue = score.getScore();
+            score.setScore(currentValue + increment);
+            
+            return ExecutionResult.success("Incremented score " + key + " by " + increment);
         } catch (Exception e) {
             return ExecutionResult.error("Failed to increment score: " + e.getMessage());
         }

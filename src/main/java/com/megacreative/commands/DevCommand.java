@@ -75,6 +75,19 @@ public class DevCommand implements CommandExecutor {
             return true;
         }
         
+        // Check for test placement command
+        if (args.length > 0 && "testplacement".equals(args[0])) {
+            com.megacreative.coding.BlockPlacementTest.createTestScript(plugin, player);
+            return true;
+        }
+        
+        // Check for test compilation command
+        if (args.length > 0 && "testcompilation".equals(args[0])) {
+            com.megacreative.coding.BlockPlacementTest.testCompilation(plugin, player.getWorld());
+            player.sendMessage("§aTest compilation completed! Check console for details.");
+            return true;
+        }
+        
         // Check for compile command
         if (args.length > 0 && "compile".equals(args[0])) {
             compileScripts(player);
@@ -354,7 +367,9 @@ public class DevCommand implements CommandExecutor {
         player.sendMessage("§7/dev variables §8- §fОткрыть меню переменных");
         player.sendMessage("§7/dev switch §8- §fПереключиться в режим разработки (дуальные миры)");
         player.sendMessage("§7/dev compile §8- §fСкомпилировать скрипты в текущем мире");
-        player.sendMessage("§7/dev testscript §8- §fСоздать тестовый скрипт");
+        player.sendMessage("§7/dev testscript §8- §fCreate test script");
+        player.sendMessage("§7/dev testplacement §8- §fTest block placement");
+        player.sendMessage("§7/dev testcompilation §8- §fTest script compilation");
         player.sendMessage("§7/dev listblocks §8- §fПоказать все блоки кода в мире");
         player.sendMessage("§7/dev run <script> §8- §fЗапустить скрипт вручную");
         player.sendMessage("§7/dev help §8- §fПоказать эту справку");

@@ -202,6 +202,12 @@ public class CommandRegistry {
             if (ccCmd != null) {
                 ccCmd.setExecutor(new GlobalChatCommand(plugin));
             }
+            
+            // Register test command
+            org.bukkit.command.PluginCommand testCmd = plugin.getCommand("test");
+            if (testCmd != null) {
+                testCmd.setExecutor(new com.megacreative.commands.TestCommand(plugin));
+            }
 
             org.bukkit.command.PluginCommand clipboardCmd = plugin.getCommand("clipboard");
             if (clipboardCmd != null && serviceRegistry != null) {
