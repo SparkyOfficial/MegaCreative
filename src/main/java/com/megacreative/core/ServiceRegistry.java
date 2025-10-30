@@ -11,7 +11,6 @@ import com.megacreative.coding.WorldCodeRestorer;
 import com.megacreative.coding.CodeBlockSignManager;
 import com.megacreative.coding.ScriptTriggerManager;
 import com.megacreative.coding.ScriptValidator;
-import com.megacreative.coding.SimpleScriptTriggerManager;
 import com.megacreative.listeners.*;
 import com.megacreative.coding.containers.BlockContainerManager;
 import com.megacreative.coding.variables.VariableManager;
@@ -35,7 +34,6 @@ import com.megacreative.coding.CodingManagerImpl;
 import com.megacreative.managers.ReferenceSystemEventManager;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.services.CodeCompiler;
-import com.megacreative.coding.activators.ActivatorManager;
 import com.megacreative.services.RepeatingTaskManager;
 import org.bukkit.plugin.Plugin;
 import java.util.logging.Level;
@@ -117,7 +115,6 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
             return configManager;
         });
         
-        dependencyContainer.registerFactory(ActivatorManager.class, (DependencyContainer.Supplier<ActivatorManager>) () -> new ActivatorManager((MegaCreative) plugin));
     }
     
     /**
@@ -251,13 +248,12 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         });
         dependencyContainer.registerType(WorldCodeRestorer.class, WorldCodeRestorer.class);
         dependencyContainer.registerType(CodeBlockSignManager.class, CodeBlockSignManager.class);
-        // Register SimpleScriptTriggerManager as a factory since it needs dependencies
-        // Регистрирует SimpleScriptTriggerManager как фабрику, так как ему нужны зависимости
-        // Registriert SimpleScriptTriggerManager als Factory, da er Abhängigkeiten benötigt
+        // Register ScriptTriggerManager as a factory since it needs dependencies
+        // Регистрирует ScriptTriggerManager как фабрику, так как ему нужны зависимости
+        // Registriert ScriptTriggerManager als Factory, da er Abhängigkeiten benötigt
         dependencyContainer.registerFactory(ScriptTriggerManager.class, (DependencyContainer.Supplier<ScriptTriggerManager>) () -> {
             IWorldManager worldManager = dependencyContainer.resolve(IWorldManager.class);
-            PlayerModeManager playerModeManager = dependencyContainer.resolve(PlayerModeManager.class);
-            return new SimpleScriptTriggerManager((MegaCreative) plugin, worldManager, playerModeManager);
+            return new ScriptTriggerManager((MegaCreative) plugin, worldManager);
         });
         
         // Register interfaces for factories
@@ -577,7 +573,4 @@ public class ServiceRegistry implements DependencyContainer.Disposable {
         return dependencyContainer.resolve(ScriptTriggerManager.class);
     }
     
-    public ActivatorManager getActivatorManager() {
-        return dependencyContainer.resolve(ActivatorManager.class);
-    }
 }

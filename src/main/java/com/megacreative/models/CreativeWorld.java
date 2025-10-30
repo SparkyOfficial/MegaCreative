@@ -2,7 +2,6 @@ package com.megacreative.models;
 
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeHandler;
 import com.megacreative.coding.CodeScript;
 import com.megacreative.coding.ScriptEngine;
 import org.bukkit.entity.Player;
@@ -103,14 +102,6 @@ public class CreativeWorld {
      */
     private List<CodeScript> scripts;
     
-    /**
-     * Code handler for managing script execution
-     *
-     * Обработчик кода для управления выполнением скриптов
-     *
-     * Code-Handler zur Verwaltung der Skriptausführung
-     */
-    private CodeHandler codeHandler;
     
     /**
      * Online players
@@ -622,33 +613,7 @@ public class CreativeWorld {
         this.lastActivity = System.currentTimeMillis();
     }
     
-    /**
-     * Gets the code handler for this world
-     * @return The code handler
-     *
-     * Получает обработчик кода для этого мира
-     * @return Обработчик кода
-     *
-     * Ruft den Code-Handler für diese Welt ab
-     * @return Der Code-Handler
-     */
-    public CodeHandler getCodeHandler() {
-        return codeHandler;
-    }
     
-    /**
-     * Sets the code handler for this world
-     * @param codeHandler The code handler to set
-     *
-     * Устанавливает обработчик кода для этого мира
-     * @param codeHandler Обработчик кода для установки
-     *
-     * Setzt den Code-Handler für diese Welt
-     * @param codeHandler Der zu setzende Code-Handler
-     */
-    public void setCodeHandler(CodeHandler codeHandler) {
-        this.codeHandler = codeHandler;
-    }
     
     /**
      * Adds a like from a player

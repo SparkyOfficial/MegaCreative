@@ -1,359 +1,348 @@
 package com.megacreative.coding;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.activators.Activator;
-import com.megacreative.coding.activators.BlockBreakActivator;
-import com.megacreative.coding.activators.BlockPlaceActivator;
-import com.megacreative.coding.activators.BukkitEventActivator;
-import com.megacreative.coding.activators.ChatActivator;
-import com.megacreative.coding.activators.EntityPickupItemActivator;
-import com.megacreative.coding.activators.PlayerDeathActivator;
-import com.megacreative.coding.activators.PlayerJoinActivator;
-import com.megacreative.coding.activators.PlayerMoveActivator;
-import com.megacreative.coding.activators.PlayerQuitActivator;
-import com.megacreative.coding.activators.PlayerRespawnActivator;
-import com.megacreative.coding.activators.PlayerTeleportActivator;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.services.BlockConfigService;
-import com.megacreative.events.CodeBlockPlacedEvent;
-import com.megacreative.events.CodeBlockBrokenEvent;
+import com.megacreative.worlds.DevWorldGenerator;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.logging.Logger;
 
-
-
-public class ScriptCompiler implements Listener {
+/**
+ * A simplified script compiler that builds script structures on-demand
+ * instead of trying to maintain real-time connections between blocks.
+ * 
+ * @author Андрій Будильников
+ */
+public class ScriptCompiler {
+    
+    private static final Logger LOGGER = Logger.getLogger(ScriptCompiler.class.getName());
     
     private final MegaCreative plugin;
     private final BlockConfigService blockConfigService;
-    // This field needs to remain as a class field since it maintains state across method calls
-    // Static analysis flags it as convertible to a local variable, but this is a false positive
-    // Это поле должно оставаться полем класса, так как оно сохраняет состояние между вызовами методов
-    // Статический анализ помечает его как конвертируемое в локальную переменную, но это ложное срабатывание
-    private final CodeStructureManager codeStructureManager; 
-
-    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, CodeStructureManager codeStructureManager) {
+    private final BlockPlacementHandler placementHandler;
+    
+    public ScriptCompiler(MegaCreative plugin, BlockConfigService blockConfigService, 
+                               BlockPlacementHandler placementHandler) {
         this.plugin = plugin;
         this.blockConfigService = blockConfigService;
-        this.codeStructureManager = codeStructureManager;
-    }
-    
-    @EventHandler
-    public void onBlockPlace(CodeBlockPlacedEvent event) {
-        try {
-            Location location = event.getLocation();
-            CodeBlock eventBlock = event.getCodeBlock();
-            
-            
-            CodeScript script = compileScriptFromEventBlock(eventBlock);
-            
-            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-            
-            if (creativeWorld != null) {
-                
-                createAndRegisterActivator(eventBlock, script, creativeWorld, location);
-                
-                addScriptToWorld(eventBlock, script, creativeWorld, worldManager);
-            }
-        } catch (Exception e) {
-            
-            plugin.getLogger().warning("Error compiling script from block place event: " + e.getMessage());
-            // Ошибка компиляции скрипта из события размещения блока: " + e.getMessage()
-        }
-    }
-    
-    @EventHandler
-    public void onBlockBreak(CodeBlockBrokenEvent event) {
-        try {
-            Location location = event.getLocation();
-            CodeBlock eventBlock = event.getCodeBlock();
-            
-            
-            removeScript(eventBlock, location);
-        } catch (Exception e) {
-            
-            plugin.getLogger().warning("Error removing script from block break event: " + e.getMessage());
-            // Ошибка удаления скрипта из события разрушения блока: " + e.getMessage()
-        }
+        this.placementHandler = placementHandler;
     }
     
     /**
-     * Creates and registers an activator for an event block
-     * @param eventBlock The event block
-     * @param script The compiled script
-     * @param creativeWorld The creative world
-     * @param location The location of the event block
+     * Compiles all scripts in a world by finding event blocks and building
+     * their action chains from scratch.
      * 
-     * Создает и регистрирует активатор для блока события
-     * @param eventBlock Блок события
-     * @param script Скомпилированный скрипт
-     * @param creativeWorld Творческий мир
-     * @param location Расположение блока события
+     * @param world The world to compile scripts for
+     * @return List of compiled scripts
      */
-    private void createAndRegisterActivator(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, Location location) {
-        try {
-            
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) {
-                return;
-            }
-            
-            
-            Activator activator = createActivatorForEvent(eventBlock, plugin, creativeWorld);
-            
-            if (activator != null) {
-                
-                activator.addAction(eventBlock);
-                
-                // Set location for Bukkit event activators
-                // Установить местоположение для активаторов событий Bukkit
-                setActivatorLocation(activator, location);
-                
-                codeHandler.registerActivator(activator);
-            }
-        } catch (Exception e) {
-            
-            plugin.getLogger().warning("Error creating and registering activator: " + e.getMessage());
-            // Ошибка создания и регистрации активатора: " + e.getMessage()
-        }
-    }
-    
-    /**
-     * Creates an appropriate activator for an event block
-     * 
-     * Создает подходящий активатор для блока события
-     */
-    private Activator createActivatorForEvent(CodeBlock eventBlock, MegaCreative plugin, CreativeWorld creativeWorld) {
-        String action = eventBlock.getAction();
+    public List<CodeScript> compileWorldScripts(World world) {
+        List<CodeScript> scripts = new ArrayList<>();
         
-        // Use a switch statement for better performance and readability
-        // Использовать оператор switch для лучшей производительности и читаемости
-        switch (action) {
-            case "onJoin":
-                return new PlayerJoinActivator(plugin, creativeWorld);
-            case "onPlayerMove":
-                return new PlayerMoveActivator(plugin, creativeWorld);
-            case "onBlockPlace":
-                return new BlockPlaceActivator(plugin, creativeWorld);
-            case "onBlockBreak":
-                return new BlockBreakActivator(plugin, creativeWorld);
-            case "onChat":
-                return new ChatActivator(plugin, creativeWorld);
-            case "onPlayerQuit":
-                return new PlayerQuitActivator(plugin, creativeWorld);
-            case "onPlayerDeath":
-                return new PlayerDeathActivator(plugin, creativeWorld);
-            case "onPlayerRespawn":
-                return new PlayerRespawnActivator(plugin, creativeWorld);
-            case "onPlayerTeleport":
-                return new PlayerTeleportActivator(plugin, creativeWorld);
-            case "onEntityPickupItem":
-                return new EntityPickupItemActivator(plugin, creativeWorld);
-            default:
-                return null;
+        // Find all event blocks in the world
+        List<CodeBlock> eventBlocks = findEventBlocksInWorld(world);
+        
+        // For each event block, build its complete script
+        for (CodeBlock eventBlock : eventBlocks) {
+            try {
+                CodeScript script = compileScriptFromEventBlock(eventBlock, world);
+                if (script != null) {
+                    scripts.add(script);
+                }
+            } catch (Exception e) {
+                LOGGER.warning("Error compiling script from event block at " + 
+                    formatLocation(eventBlock) + ": " + e.getMessage());
+            }
         }
+        
+        return scripts;
     }
     
     /**
-     * Sets the location for Bukkit event activators
+     * Finds all event blocks (blocks with actions starting with "on") in a world
      * 
-     * Устанавливает местоположение для активаторов событий Bukkit
+     * @param world The world to search in
+     * @return List of event blocks
      */
-    private void setActivatorLocation(Activator activator, Location location) {
-        if (activator instanceof BukkitEventActivator) {
-            ((BukkitEventActivator) activator).setLocation(location);
-        }
-    }
-    
-    private void removeScript(CodeBlock eventBlock, Location location) {
-         try {
-            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(location.getWorld());
-            if (creativeWorld != null) {
-                List<CodeScript> scripts = creativeWorld.getScripts();
-                if (scripts != null) {
-                    boolean removed = scripts.removeIf(script -> script.getRootBlock().getId().equals(eventBlock.getId()));
-                    if (removed) {
-                        worldManager.saveWorld(creativeWorld);
-                    }
+    private List<CodeBlock> findEventBlocksInWorld(World world) {
+        List<CodeBlock> eventBlocks = new ArrayList<>();
+        
+        // Iterate through all code blocks in the placement handler
+        for (Location location : placementHandler.getBlockCodeBlocks().keySet()) {
+            // Check if this block is in the specified world
+            if (location.getWorld().equals(world)) {
+                CodeBlock block = placementHandler.getCodeBlock(location);
+                if (block != null && isEventBlock(block)) {
+                    eventBlocks.add(block);
                 }
             }
-        } catch (Exception e) {
-            
-            plugin.getLogger().warning("Error removing script: " + e.getMessage());
-            // Ошибка удаления скрипта: " + e.getMessage()
         }
-    }
-    
-    private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock) {
         
-        
-        
-        
-        
-        
-        
-        CodeScript script = new CodeScript(eventBlock);
-        
-        
-        
-        return buildCompleteScript(script, eventBlock);
+        return eventBlocks;
     }
     
     /**
-     * Builds a complete script by traversing the block structure
-     * @param script The script to build
-     * @param currentBlock The current block being processed
-     * @return The completed script
+     * Checks if a block is an event block (action starts with "on")
      * 
-     * Строит полный скрипт, обходя структуру блоков
-     * @param script Скрипт для построения
-     * @param currentBlock Текущий обрабатываемый блок
-     * @return Завершенный скрипт
+     * @param block The block to check
+     * @return true if it's an event block
      */
-    private CodeScript buildCompleteScript(CodeScript script, CodeBlock currentBlock) {
+    private boolean isEventBlock(CodeBlock block) {
+        return block != null && block.getAction() != null && 
+               block.getAction().startsWith("on");
+    }
+    
+    /**
+     * Compiles a complete script starting from an event block
+     * 
+     * @param eventBlock The root event block
+     * @param world The world the block is in
+     * @return The compiled script
+     */
+    private CodeScript compileScriptFromEventBlock(CodeBlock eventBlock, World world) {
+        // Create a new script with the event block as root
+        CodeScript script = new CodeScript(eventBlock);
         
-        if (currentBlock.getNextBlock() != null) {
-            // Recursively process the next block in the chain
-            // Рекурсивно обрабатывать следующий блок в цепочке
-            buildCompleteScript(script, currentBlock.getNextBlock());
-        }
+        // Build the horizontal chain (next blocks)
+        buildHorizontalChain(eventBlock);
         
-        
-        for (CodeBlock child : currentBlock.getChildren()) {
-            // Recursively process all child blocks (nested structures)
-            // Рекурсивно обрабатывать все дочерние блоки (вложенные структуры)
-            buildCompleteScript(script, child);
-        }
+        // Build vertical chains (children/parents)
+        buildVerticalChains(eventBlock);
         
         return script;
     }
+    
+    /**
+     * Builds the horizontal chain of blocks (nextBlock relationships)
+     * by scanning to the right from the starting block
+     * 
+     * @param startBlock The block to start from
+     */
+    private void buildHorizontalChain(CodeBlock startBlock) {
+        CodeBlock currentBlock = startBlock;
+        Location currentLocation = findBlockLocation(startBlock);
+        
+        if (currentLocation == null) return;
+        
+        // Keep scanning to the right until we find no more blocks
+        while (currentBlock != null) {
+            // Get the next location to the right
+            Location nextLocation = currentLocation.clone().add(1, 0, 0);
+            CodeBlock nextBlock = placementHandler.getCodeBlock(nextLocation);
+            
+            // If we found a next block, connect it
+            if (nextBlock != null) {
+                currentBlock.setNextBlock(nextBlock);
+                LOGGER.info("Linked horizontal: " + formatLocation(currentBlock) + " -> " + formatLocation(nextBlock));
+                currentBlock = nextBlock;
+                currentLocation = nextLocation;
+            } else {
+                // No more blocks to the right, stop
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Builds vertical chains (parent-child relationships) for control blocks
+     * 
+     * @param rootBlock The root block to start from
+     */
+    private void buildVerticalChains(CodeBlock rootBlock) {
+        // Build the complete tree structure by linking all blocks
+        Map<Location, CodeBlock> allBlocks = placementHandler.getBlockCodeBlocks();
+        linkBlocks(rootBlock, allBlocks);
+    }
+    
+    /**
+     * Recursively links blocks to build the complete script structure
+     * 
+     * @param current The current block to process
+     * @param allBlocks Map of all blocks in the world
+     */
+    private void linkBlocks(CodeBlock current, Map<Location, CodeBlock> allBlocks) {
+        if (current == null) return;
 
-    private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, CreativeWorld creativeWorld, IWorldManager worldManager) {
-        List<CodeScript> scripts = creativeWorld.getScripts();
-        if (scripts == null) {
-            scripts = new ArrayList<>();
-            creativeWorld.setScripts(scripts);
+        Location currentLocation = findBlockLocation(current);
+        if (currentLocation == null) return;
+        
+        // 1. Связываем горизонтальную цепочку (nextBlock)
+        Location nextLocation = currentLocation.clone().add(1, 0, 0);
+        CodeBlock nextBlock = allBlocks.get(nextLocation);
+        if (nextBlock != null) {
+            current.setNextBlock(nextBlock);
+            LOGGER.info("Linked horizontal: " + formatLocation(current) + " -> " + formatLocation(nextBlock));
         }
-        
-        scripts.removeIf(existingScript -> existingScript.getRootBlock().getId().equals(eventBlock.getId()));
-        scripts.add(script);
-        worldManager.saveWorld(creativeWorld);
-    }
-    
-    /**
-     * Recompiles all scripts in a world
-     * This should be called when the world is loaded or when significant changes are made
-     * @param world the world to recompile scripts for
-     * 
-     * Перекомпилирует все скрипты в мире
-     * Это должно вызываться при загрузке мира или при внесении значительных изменений
-     * @param world мир, для которого нужно перекомпилировать скрипты
-     */
-    public void compileWorldScripts(World world) {
-        try {
-            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
-            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
-            if (creativeWorld == null) return;
+
+        // 2. Если это блок-контейнер (IF, REPEAT), ищем его дочерние элементы
+        if (isControlBlock(current)) {
+            // Дочерние блоки должны быть на следующей линии (например, Z+2)
+            // и их X должен быть больше, чем у родителя (отступ)
+            int parentX = currentLocation.getBlockX();
+            int parentZ = currentLocation.getBlockZ();
             
-            // Compile all event blocks in the world
-            List<CodeScript> newScripts = compileEventBlocksInWorld(world);
+            // Ищем дочерние блоки на следующей линии (Z + LINES_SPACING)
+            int childLineZ = parentZ + DevWorldGenerator.getLinesSpacing();
             
-            creativeWorld.setScripts(newScripts);
-            worldManager.saveWorld(creativeWorld);
-            
-        } catch (Exception e) {
-            // Log the exception
-            // Записать исключение в журнал
-            plugin.getLogger().warning("Error compiling world scripts: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * Compiles all event blocks in a specific world
-     * 
-     * Компилирует все блоки событий в определенном мире
-     */
-    private List<CodeScript> compileEventBlocksInWorld(World world) {
-        List<CodeScript> newScripts = new ArrayList<>();
-        
-        // Get the block placement handler to access all code blocks
-        // Получить обработчик размещения блоков для доступа ко всем блокам кода
-        BlockPlacementHandler placementHandler = plugin.getServiceRegistry().getBlockPlacementHandler();
-        
-        // Process all code blocks in the world
-        // Обработать все блоки кода в мире
-        for (Map.Entry<Location, CodeBlock> entry : placementHandler.getBlockCodeBlocks().entrySet()) {
-            Location location = entry.getKey();
-            
-            // Check if this block is in the specified world
-            // Проверить, находится ли этот блок в указанном мире
-            if (isBlockInWorld(location, world)) {
-                CodeBlock block = entry.getValue();
+            // Ищем первый блок с отступом (X > parentX) на следующей линии
+            for (int childX = parentX + 1; childX < parentX + 20; childX++) { // Ограничиваем поиск 20 блоками вправо
+                Location childLocation = new Location(currentLocation.getWorld(), childX, currentLocation.getBlockY(), childLineZ);
+                CodeBlock childBlock = allBlocks.get(childLocation);
                 
-                // Process event blocks only
-                // Обрабатывать только блоки событий
-                if (isEventBlock(block)) {
-                    CodeScript compiledScript = compileBlockToScript(block);
-                    if (compiledScript != null) {
-                        newScripts.add(compiledScript);
-                    }
+                if (childBlock != null) {
+                    current.addChild(childBlock);
+                    LOGGER.info("Linked child: " + formatLocation(current) + " -> " + formatLocation(childBlock));
+                    // Рекурсивно строим цепочку для дочернего блока
+                    linkBlocks(childBlock, allBlocks);
+                    break; // Берем только первый дочерний блок
                 }
             }
         }
+
+        // 3. Рекурсивно идем по основной (горизонтальной) цепочке
+        linkBlocks(current.getNextBlock(), allBlocks);
+    }
+    
+    /**
+     * Checks if a block is a control block that can have children
+     * 
+     * @param block The block to check
+     * @return true if it's a control block
+     */
+    private boolean isControlBlock(CodeBlock block) {
+        if (block == null || block.getAction() == null) return false;
         
-        return newScripts;
+        // Control blocks that can have children
+        switch (block.getMaterialName()) {
+            case "OAK_PLANKS":  // CONDITION
+            case "OBSIDIAN":    // IF_VAR
+            case "REDSTONE_BLOCK": // IF_GAME
+            case "BRICKS":      // IF_MOB
+            case "EMERALD_BLOCK": // REPEAT
+            case "END_STONE":   // ELSE
+                return true;
+            default:
+                return false;
+        }
     }
     
     /**
-     * Checks if a block location is in the specified world
+     * Finds the location of a specific code block
      * 
-     * Проверяет, находится ли расположение блока в указанном мире
+     * @param block The block to find
+     * @return The location, or null if not found
      */
-    private boolean isBlockInWorld(Location location, World world) {
-        return location.getWorld().equals(world);
+    private Location findBlockLocation(CodeBlock block) {
+        if (block == null) return null;
+        
+        // Search through all locations to find this block
+        for (Location location : placementHandler.getBlockCodeBlocks().keySet()) {
+            CodeBlock storedBlock = placementHandler.getCodeBlock(location);
+            if (storedBlock != null && storedBlock.getId().equals(block.getId())) {
+                return location;
+            }
+        }
+        
+        return null;
     }
     
     /**
-     * Compiles a single block to a script with error handling
+     * Formats a location for logging
      * 
-     * Компилирует один блок в скрипт с обработкой ошибок
+     * @param block The block to get location for
+     * @return Formatted location string
      */
-    private CodeScript compileBlockToScript(CodeBlock block) {
+    private String formatLocation(CodeBlock block) {
+        Location location = findBlockLocation(block);
+        if (location != null) {
+            return "(" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")";
+        }
+        return "unknown";
+    }
+    
+    /**
+     * Saves compiled scripts to a creative world
+     * 
+     * @param world The Bukkit world
+     * @param scripts The scripts to save
+     */
+    public void saveScriptsToWorld(World world, List<CodeScript> scripts) {
         try {
-            return compileScriptFromEventBlock(block);
+            IWorldManager worldManager = plugin.getServiceRegistry().getWorldManager();
+            CreativeWorld creativeWorld = worldManager.findCreativeWorldByBukkit(world);
+            
+            if (creativeWorld != null) {
+                creativeWorld.setScripts(scripts);
+                worldManager.saveWorld(creativeWorld);
+                LOGGER.info("Saved " + scripts.size() + " scripts to world " + world.getName());
+            }
         } catch (Exception e) {
-            // Log the exception but continue processing other blocks
-            // Записать исключение в журнал, но продолжить обработку других блоков
-            plugin.getLogger().warning("Error compiling script from block: " + e.getMessage());
-            return null;
+            LOGGER.warning("Error saving scripts to world: " + e.getMessage());
         }
     }
     
     /**
-     * Checks if a block is an event block
-     * @param block the block to check
-     * @return true if the block is an event block
+     * Prints detailed script structure for debugging
      * 
-     * Проверяет, является ли блок блоком события
-     * @param block блок для проверки
-     * @return true, если блок является блоком события
+     * @param scripts The scripts to print
      */
-    private boolean isEventBlock(CodeBlock block) {
-        if (block == null || block.getAction() == null) {
-            return false;
+    public void printScriptStructure(List<CodeScript> scripts) {
+        for (int i = 0; i < scripts.size(); i++) {
+            CodeScript script = scripts.get(i);
+            LOGGER.info("Script " + (i + 1) + ": " + script.getRootBlock().getAction() + 
+                       " (" + script.getBlocks().size() + " blocks)");
+            printBlockChain(script.getRootBlock(), 0);
+        }
+    }
+    
+    /**
+     * Recursively prints the block chain structure
+     * 
+     * @param block The block to print
+     * @param indent The indentation level
+     */
+    private void printBlockChain(CodeBlock block, int indent) {
+        if (block == null) return;
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indent; i++) {
+            sb.append("  ");
+        }
+        sb.append("- [").append(getBlockType(block)).append(": ").append(block.getAction()).append("]");
+        
+        LOGGER.info(sb.toString());
+        
+        // Print children if any
+        if (!block.getChildren().isEmpty()) {
+            for (CodeBlock child : block.getChildren()) {
+                printBlockChain(child, indent + 1);
+            }
         }
         
-        
-        return block.getAction().startsWith("on");
+        // Continue with next block
+        printBlockChain(block.getNextBlock(), indent);
+    }
+    
+    /**
+     * Gets a simple block type description for logging
+     * 
+     * @param block The block to describe
+     * @return The block type description
+     */
+    private String getBlockType(CodeBlock block) {
+        if (isEventBlock(block)) {
+            return "Event";
+        } else if (isControlBlock(block)) {
+            return "Control";
+        } else {
+            return "Action";
+        }
     }
 }

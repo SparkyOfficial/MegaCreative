@@ -1,7 +1,7 @@
 package com.megacreative.commands;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.CodingItems;
-import com.megacreative.coding.SimpleScriptCompiler;
+import com.megacreative.coding.ScriptCompiler;
 import com.megacreative.managers.PlayerModeManager;
 import com.megacreative.models.CreativeWorld;
 import com.megacreative.models.WorldMode;
@@ -143,7 +143,7 @@ public class DevCommand implements CommandExecutor {
             }
             
             // Create the script compiler
-            SimpleScriptCompiler compiler = new SimpleScriptCompiler(
+            ScriptCompiler compiler = new ScriptCompiler(
                 plugin,
                 plugin.getServiceRegistry().getBlockConfigService(),
                 plugin.getServiceRegistry().getBlockPlacementHandler()

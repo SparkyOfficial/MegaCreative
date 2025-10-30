@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import org.bukkit.entity.Player;
 
 import com.megacreative.MegaCreative;
-import com.megacreative.coding.CodeHandler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.models.CreativeWorld;
@@ -94,16 +93,7 @@ public class GameLoopManager {
             }
             
             
-            CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) {
-                return;
-            }
-            
-            
-            
-            
-            
-            
+            // Removed CodeHandler system - using ScriptTriggerManager instead
             LOGGER.fine("Executing game loop for player: " + player.getName());
             
         } catch (Exception e) {

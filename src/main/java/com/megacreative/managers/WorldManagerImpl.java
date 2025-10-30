@@ -3,7 +3,6 @@ package com.megacreative.managers;
 import com.megacreative.MegaCreative;
 import com.megacreative.coding.BlockType;
 import com.megacreative.coding.CodeBlock;
-import com.megacreative.coding.CodeHandler;
 import com.megacreative.coding.ScriptEngine;
 import com.megacreative.interfaces.IWorldManager;
 import com.megacreative.interfaces.ICodingManager;
@@ -11,7 +10,6 @@ import com.megacreative.models.*;
 import com.megacreative.utils.ConfigManager;
 import com.megacreative.utils.JsonSerializer;
 import com.megacreative.worlds.DevWorldGenerator;
-import com.megacreative.coding.activators.ActivatorManager;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -277,12 +275,6 @@ public class WorldManagerImpl implements IWorldManager {
                     codingManager.loadScriptsForWorld(world);
                 }
                 
-                
-                ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-                if (activatorManager != null && world.getCodeHandler() != null) {
-                    activatorManager.registerCodeHandler(world.getId(), world.getCodeHandler());
-                }
-                
                 plugin.getLogger().fine("Successfully loaded world: " + world.getName() + " (ID: " + world.getId() + ")");
             } else {
                 plugin.getLogger().warning("Failed to deserialize world from file: " + worldFile.getName());
@@ -537,16 +529,6 @@ public class WorldManagerImpl implements IWorldManager {
                     }
                     
                     
-                    MegaCreative megaPlugin = (MegaCreative) plugin;
-                    CodeHandler codeHandler = new CodeHandler(megaPlugin, creativeWorld);
-                    creativeWorld.setCodeHandler(codeHandler);
-                    
-                    
-                    ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-                    if (activatorManager != null) {
-                        activatorManager.registerCodeHandler(worldId, codeHandler);
-                    }
-                    
                     
                     player.teleport(newWorld.getSpawnLocation());
                     player.sendMessage("§aМир '" + name + "' успешно создан!");
@@ -708,13 +690,6 @@ public class WorldManagerImpl implements IWorldManager {
         if (blockPlacementHandler != null && devWorldToRemove != null) {
             blockPlacementHandler.clearAllCodeBlocksInWorld(devWorldToRemove);
         }
-        
-        
-        com.megacreative.coding.activators.ActivatorManager activatorManager = megaPlugin.getServiceRegistry().getActivatorManager();
-        if (activatorManager != null) {
-            activatorManager.unregisterCodeHandler(worldId);
-        }
-
         
         
         Bukkit.getScheduler().runTaskAsynchronously(getPlugin(), () -> deleteWorldFilesInternal(world, requester));

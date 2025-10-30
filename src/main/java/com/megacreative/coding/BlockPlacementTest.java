@@ -87,7 +87,7 @@ public class BlockPlacementTest {
     public static void testCompilation(MegaCreative plugin, World world) {
         try {
             // Create the script compiler
-            SimpleScriptCompiler compiler = new SimpleScriptCompiler(
+            ScriptCompiler compiler = new ScriptCompiler(
                 plugin,
                 plugin.getServiceRegistry().getBlockConfigService(),
                 plugin.getServiceRegistry().getBlockPlacementHandler()

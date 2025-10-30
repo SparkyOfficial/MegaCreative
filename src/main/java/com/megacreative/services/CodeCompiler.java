@@ -233,31 +233,7 @@ public class CodeCompiler implements org.bukkit.event.Listener {
     }
 
     private void createAndRegisterActivator(CodeBlock eventBlock, com.megacreative.models.CreativeWorld creativeWorld, org.bukkit.Location location) {
-        try {
-            com.megacreative.coding.CodeHandler codeHandler = creativeWorld.getCodeHandler();
-            if (codeHandler == null) return;
-            com.megacreative.coding.activators.Activator activator = null;
-            String action = eventBlock.getAction();
-            if ("onJoin".equals(action)) activator = new com.megacreative.coding.activators.PlayerJoinActivator(plugin, creativeWorld);
-            else if ("onPlayerMove".equals(action)) activator = new com.megacreative.coding.activators.PlayerMoveActivator(plugin, creativeWorld);
-            else if ("onBlockPlace".equals(action)) activator = new com.megacreative.coding.activators.BlockPlaceActivator(plugin, creativeWorld);
-            else if ("onBlockBreak".equals(action)) activator = new com.megacreative.coding.activators.BlockBreakActivator(plugin, creativeWorld);
-            else if ("onChat".equals(action)) activator = new com.megacreative.coding.activators.ChatActivator(plugin, creativeWorld);
-            else if ("onPlayerQuit".equals(action)) activator = new com.megacreative.coding.activators.PlayerQuitActivator(plugin, creativeWorld);
-            else if ("onPlayerDeath".equals(action)) activator = new com.megacreative.coding.activators.PlayerDeathActivator(plugin, creativeWorld);
-            else if ("onPlayerRespawn".equals(action)) activator = new com.megacreative.coding.activators.PlayerRespawnActivator(plugin, creativeWorld);
-            else if ("onPlayerTeleport".equals(action)) activator = new com.megacreative.coding.activators.PlayerTeleportActivator(plugin, creativeWorld);
-            else if ("onEntityPickupItem".equals(action)) activator = new com.megacreative.coding.activators.EntityPickupItemActivator(plugin, creativeWorld);
-            if (activator != null) {
-                activator.addAction(eventBlock);
-                if (activator instanceof com.megacreative.coding.activators.BukkitEventActivator) {
-                    ((com.megacreative.coding.activators.BukkitEventActivator) activator).setLocation(location);
-                }
-                codeHandler.registerActivator(activator);
-            }
-        } catch (Exception e) {
-            logger.warning("Error creating and registering activator: " + e.getMessage());
-        }
+        // Removed activator system - now using ScriptTriggerManager
     }
 
     private void addScriptToWorld(CodeBlock eventBlock, CodeScript script, com.megacreative.models.CreativeWorld creativeWorld, com.megacreative.interfaces.IWorldManager worldManager) {
